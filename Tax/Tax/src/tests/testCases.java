@@ -45,8 +45,6 @@ public class testCases {
 	//@Test
 	public void test1() {
 		
-		
-		
 		Cash c1 = new Cash(300);
 		Material HouseB = new Material(300,"HouseB",1);
 		Actions a1 = new Actions("P1","C",HouseB);
