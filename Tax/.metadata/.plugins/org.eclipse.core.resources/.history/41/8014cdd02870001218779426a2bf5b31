@@ -1,0 +1,36 @@
+package interpreter;
+
+public class Annuity extends Assets{
+
+	public Annuity(int value) {
+		super(value);
+	}
+
+	private int years;
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+
+	public void setYears(int years){
+		this.years = years;
+	}
+	public int getYears(){
+		return years;
+	}
+
+
+
+	@Override
+	void transfer(Entity from, Entity to) {
+		
+	}
+
+	@Override
+	public String toString() {
+		return "Annuity";
+	}
+}

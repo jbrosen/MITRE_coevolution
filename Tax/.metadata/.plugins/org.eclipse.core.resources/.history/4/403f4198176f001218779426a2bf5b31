@@ -1,0 +1,14 @@
+package interpreter;
+
+public abstract class Assets {
+	private int taxValue;
+	private int value;
+	private int getValue(){
+		return value;
+	}
+	private void setValue(int value){
+		value =  value;
+	}
+    abstract void calculateTax();
+    abstract void transfer();
+}

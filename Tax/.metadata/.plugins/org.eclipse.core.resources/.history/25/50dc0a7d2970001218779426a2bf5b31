@@ -1,0 +1,84 @@
+package interpreter;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class Annuity extends Assets{
+
+	public Annuity(int value) {
+		super(value);
+	}
+
+	private int years;
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+
+	public void setYears(int years){
+		this.years = years;
+	}
+	public int getYears(){
+		return years;
+	}
+
+
+
+	@Override
+	void transfer(Entity from, Entity to) {
+		boolean from_found = false;
+		boolean to_found = false;
+		Assets from_asset = null;
+		Assets to_asset = null;
+		ArrayList<Assets> fromP = from.getPortfolio();
+		ArrayList<Assets> toP = to.getPortfolio();
+		Iterator From_itr = fromP.iterator();
+		Iterator To_itr = toP.iterator();
+		
+		while(From_itr.hasNext()){
+			from_asset = (Assets) From_itr.next();
+			if(from_asset.toString().equals(this.toString())){
+				from_found = true;
+			}
+		}
+		
+		while(To_itr.hasNext()){
+			to_asset = (Assets) To_itr.next();
+			if(to_asset.toString().equals(this.toString())){
+				to_found = true;
+			}
+		}
+		
+		if(from_found && to_found){
+			int fvalue = from_asset.getAssetValue() - this.getAssetValue();
+			from_asset.setAssetValue(fvalue);
+			int fyears = from_asset.getAssetValue() - this.getAssetValue();
+			from_asset.setAssetValue(fvalue);
+			
+			int tvalue = to_asset.getAssetValue() + this.getAssetValue();
+			to_asset.setAssetValue(tvalue);
+		}
+		else if (from_found && !to_found){
+			toP.add(this);
+			
+		}
+		else if(to_found && !from_found){
+			int tvalue = to_asset.getAssetValue() + this.getAssetValue();
+			to_asset.setAssetValue(tvalue);
+			
+			this.setAssetValue(-this.getAssetValue());
+			fromP.add(this);
+		}
+		else{
+			System.err.println("transfer between objects that don't exit");
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "Annuity";
+	}
+}

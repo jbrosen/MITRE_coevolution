@@ -1,0 +1,22 @@
+package interpreter;
+
+public class Bond extends Assets{
+
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void transfer(Entity from, Entity to) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	@Override
+	String toStrng() {
+		return "Bond";
+	}
+}

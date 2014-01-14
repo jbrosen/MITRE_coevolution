@@ -1,0 +1,35 @@
+package interpreter;
+
+public class Material extends Assets{
+
+	private String name;
+	private int quantity;
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void transfer(Entity from, Entity to) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public String getName(){
+		return name;
+	}
+	public void setName(String name){
+		this.name = name;
+	}
+	
+	public int getQuantity(){
+		return quantity;
+	}
+	public void setQuantity(int quantity){
+		this.quantity = quantity;
+	}
+
+
+
+}

@@ -1,0 +1,26 @@
+package interpreter;
+
+public abstract class Assets {
+	private int taxValue;
+	private int AssetValue;
+	abstract void calculateTax();
+	abstract String toString();
+	abstract void transfer(Entity from, Entity to);
+	
+	
+	public int getAssetValue(){
+		return AssetValue;
+	}
+	public void setAssetValue(int AssetValue){
+		this.AssetValue =  AssetValue;
+	}
+	
+	public int getTaxValue(){
+		return AssetValue;
+	}
+	public void setTaxValue(int taxValue){
+		this.taxValue =  taxValue;
+	}
+	
+  
+}

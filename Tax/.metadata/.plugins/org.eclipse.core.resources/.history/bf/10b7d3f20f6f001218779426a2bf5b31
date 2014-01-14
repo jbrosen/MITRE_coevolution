@@ -1,0 +1,17 @@
+package interpreter;
+
+public class Material extends Assets{
+
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	void transfer() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

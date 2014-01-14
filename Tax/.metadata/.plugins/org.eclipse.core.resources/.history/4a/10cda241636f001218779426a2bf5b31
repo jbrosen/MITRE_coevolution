@@ -1,0 +1,8 @@
+package interpreter;
+
+public class Actions {
+	private String to;
+	private String from;
+	private Assets transferableAsset;
+
+}

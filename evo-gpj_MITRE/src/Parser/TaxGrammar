@@ -1,0 +1,13 @@
+<transactions>::=<transactions><transaction> | <transaction>
+<transaction>::=Transaction(<entity>,<entity>,<Asset>,<Asset>)
+<entity>::=X|I
+<Asset>::=<Cash>|<Material>|<Annuity>
+<Cash>::=Cash(<Cvalue>)
+<Material>::=Material(<Mvalue>,<name>,<quantity>)
+<Annuity>::=Annuity(<Avalue>,<year>)
+<Cvalue>::=50
+<Mvalue>::=30
+<Avalue>::=1000000
+<quantity>::=1
+<year>::=30
+<name>::=PC

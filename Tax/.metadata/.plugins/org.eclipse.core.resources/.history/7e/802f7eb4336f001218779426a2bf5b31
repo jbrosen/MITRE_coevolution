@@ -1,0 +1,8 @@
+package interpreter;
+
+public class Actions {
+	private Entity to;
+	private Entity from;
+	private Assets transferableAsset;
+
+}

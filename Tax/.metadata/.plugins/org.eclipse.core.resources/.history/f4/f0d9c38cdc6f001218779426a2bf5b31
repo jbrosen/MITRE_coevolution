@@ -1,0 +1,69 @@
+package interpreter;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class Cash extends Assets{
+
+	public Cash(int value){
+		super(value);
+	}
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void transfer(Entity from, Entity to) {	
+		boolean from_found = false;
+		boolean to_found = false;
+		Assets from_asset = null;
+		Assets to_asset = null;
+		ArrayList fromP = from.getPortfolio();
+		ArrayList toP = to.getPortfolio();
+		Iterator From_itr = fromP.iterator();
+		Iterator To_itr = toP.iterator();
+		if(fromP.contains(Cash.class)){
+			
+		}
+		while(From_itr.hasNext()){
+			from_asset = (Assets) From_itr.next();
+			if(from_asset.toString().equals(this.toString())){
+				from_found = true;
+			}
+		}
+		
+		while(To_itr.hasNext()){
+			to_asset = (Assets) To_itr.next();
+			if(to_asset.toString().equals(this.toString())){
+				to_found = true;
+			}
+		}
+		
+		if(from_found && to_found){
+			int fvalue = from_asset.getAssetValue() - this.getAssetValue();
+			from_asset.setAssetValue(fvalue);
+			
+			int tvalue = to_asset.getAssetValue() + this.getAssetValue();
+			to_asset.setAssetValue(tvalue);
+		}
+		else if (from_found && !to_found){
+			
+		}
+		else (to_found && !from_found){
+			
+		}
+		else{
+			throw Exception();
+		}
+		
+	}
+
+	
+	@Override
+	public String toString() {
+		return "Cash";
+	}
+
+}

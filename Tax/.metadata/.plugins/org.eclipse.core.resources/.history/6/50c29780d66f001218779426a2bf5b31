@@ -1,0 +1,16 @@
+package interpreter;
+
+import java.util.ArrayList;
+
+public class Main {
+	
+	public ArrayList actionList = new ArrayList<Actions>();
+	public ArrayList nodesList = new ArrayList<Entity>();
+	
+	Cash c = new Cash();
+	
+	public static void main(String[] args){
+		System.out.println(Cash.class);
+		
+	}
+}

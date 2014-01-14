@@ -1,0 +1,17 @@
+<transactions>::=<transactions><transaction> | <transaction>
+<transaction>::=Transaction(<entity>,<entity>,<Asset>,<Asset>)
+<entity>::=Brown|NewCo|Jones|JonesCo|FamilyTrust
+<Asset>::=<Cash>|<Material>|<Annuity>|<PartnershipAsset>
+<Cash>::=Cash(<Cvalue>)
+<Material>::=Material(<Mvalue>,<name>,<quantity>)
+<Annuity>::=Annuity(<Avalue>,<year>)
+<PartnershipAsset>::=PartnershipAsset(<Pshare>,<Pname>)
+<Share>::=Share(<Sshare>)
+<Cvalue>::=200|300|100
+<Avalue>::=200|300|100
+<year>::=30
+<Pname>::=NewCo|JonesCo|FamilyTrust
+<Pshare>::=99
+<Mvalue>::=200
+<name>::=Hotel
+<quantity>::=1

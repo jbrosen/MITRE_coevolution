@@ -1,0 +1,15 @@
+package interpreter;
+
+import java.util.ArrayList;
+
+public class Main {
+	
+
+	public static void main(String[] args){
+		Cash c = new Cash(3);
+		ArrayList n = new ArrayList<Assets>();
+		n.add(c);
+		
+		
+	}
+}

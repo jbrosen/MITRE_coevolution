@@ -1,0 +1,8 @@
+package interpreter;
+
+public class Transfer {
+	private Object action;
+	private void transfer(Actions action){
+	}
+
+}

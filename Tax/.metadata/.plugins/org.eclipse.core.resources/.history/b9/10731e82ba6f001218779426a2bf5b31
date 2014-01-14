@@ -1,0 +1,11 @@
+package interpreter;
+
+import java.util.ArrayList;
+
+public class Main {
+	
+	public ArrayList actionList = new ArrayList<Actions>();
+	public static void Main(String args){
+		
+	}
+}

@@ -1,0 +1,11 @@
+package interpreter;
+
+public class Bond extends Assets{
+
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

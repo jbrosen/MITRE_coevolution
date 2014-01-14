@@ -1,0 +1,21 @@
+package interpreter;
+
+public class Cash extends Assets{
+
+	@Override
+	void calculateTax() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void transfer(Entity from, Entity to) {
+		
+		
+	}
+
+	public String toString(){
+		return "Cash";
+	}
+
+}

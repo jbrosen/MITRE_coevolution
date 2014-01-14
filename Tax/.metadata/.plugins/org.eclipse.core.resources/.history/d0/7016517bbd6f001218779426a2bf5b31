@@ -1,0 +1,54 @@
+package interpreter;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class Transfer {
+	
+	private ArrayList actions = new ArrayList();
+	private ArrayList nodes = new ArrayList();
+	
+	public Transfer(ArrayList actions, ArrayList nodes){
+		this.actions = (ArrayList) actions.clone();
+		this.nodes = (ArrayList) nodes.clone();
+	}
+	private void transfer(){
+		Iterator itr = actions.iterator();
+		while(itr.hasNext()){
+			Actions action = (Actions) itr.next();
+			Entity from = getFrom(action);
+			Entity to = getTo(action);
+			action.getTransferableAssets().transfer(from, to);
+		}
+	}
+	
+	private Entity getFrom(Actions action){
+		Entity from = null;
+		Iterator itr = nodes.iterator();
+		while(itr.hasNext()){
+			 from =  ((Entity) itr.next());
+			 if (from.getName().equals(action.getFrom())){
+				 break;
+			 }
+			
+		}
+		
+		return from;
+	}
+	private Entity getTo(Actions action){
+		Entity to = null;
+		Iterator itr = nodes.iterator();
+		while(itr.hasNext()){
+			 to =  ((Entity) itr.next());
+			 if (to.getName().equals(action.getFrom())){
+				 break;
+			 }
+			
+		}
+		
+		return to;
+	}
+	
+	
+
+}

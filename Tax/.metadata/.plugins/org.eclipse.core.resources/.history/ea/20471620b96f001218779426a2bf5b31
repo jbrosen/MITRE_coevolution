@@ -1,0 +1,16 @@
+package interpreter;
+
+import java.util.ArrayList;
+
+public class Transfer {
+	private Object action;
+	private ArrayList actions = new ArrayList();
+	
+	public Transfer(ArrayList actions){
+		this.actions = (ArrayList) actions.clone();
+	}
+	private void transfer(Actions action){
+		// To be implement
+	}
+
+}

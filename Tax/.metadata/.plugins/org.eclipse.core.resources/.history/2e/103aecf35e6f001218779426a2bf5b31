@@ -1,0 +1,14 @@
+package interpreter;
+
+public class Transfer {
+	private Object action;
+	
+	
+	public Transfer(Actions action){
+		this.action = action;
+	}
+	private void transfer(Actions action){
+		// To be implement
+	}
+
+}

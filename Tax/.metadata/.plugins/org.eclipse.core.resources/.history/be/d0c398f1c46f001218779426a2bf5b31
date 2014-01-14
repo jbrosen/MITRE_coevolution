@@ -1,0 +1,20 @@
+package interpreter;
+
+import java.util.ArrayList;
+
+public class TaxPayer implements Entity{
+	private final ArrayList Portfolio = new ArrayList<Assets>();
+	private String name;
+	
+	public TaxPayer(String name){
+		this.name = name;
+	}
+	public String getName(){
+		return name;
+	}
+	@Override
+	public ArrayList Portfolio(){
+		return Portfolio;
+	}
+
+}

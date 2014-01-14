@@ -1,0 +1,11 @@
+package interpreter;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public interface Entity {
+	final ArrayList Portfolio = new ArrayList<Assets>();
+	public String getName();
+	Iterator itr = Portfolio.iterator();
+	
+}

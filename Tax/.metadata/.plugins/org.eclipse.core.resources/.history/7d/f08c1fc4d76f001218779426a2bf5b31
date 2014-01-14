@@ -1,0 +1,22 @@
+package interpreter;
+
+import java.util.ArrayList;
+
+public class Main {
+	
+	public ArrayList actionList = new ArrayList<Actions>();
+	public ArrayList nodesList = new ArrayList<Entity>();
+	
+	
+	
+	
+	public static void main(String[] args){
+		Cash c = new Cash(3);
+		ArrayList n = new ArrayList<Assets>();
+		n.add(c);
+		
+		if(n.contains(Object.class.equals(Cash.class))){
+			System.out.println("true");
+		}
+	}
+}

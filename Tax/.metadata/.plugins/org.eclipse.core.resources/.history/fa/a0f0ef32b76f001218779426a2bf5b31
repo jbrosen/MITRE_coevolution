@@ -1,0 +1,24 @@
+package interpreter;
+
+public class Actions {
+	
+	private String from;
+	private String to;
+	private Assets transferableAsset;
+
+	public Actions(String from,String to, Assets transferableAsset){
+		this.from = from;
+		this.to = to;
+		this.transferableAsset = transferableAsset;
+	}
+	
+	public String getFrom(){
+		return from;
+	}
+	public String getTo(){
+		return to;
+	}
+	public Assets transferableAssets(){
+		return transferableAsset;
+	}
+}

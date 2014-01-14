@@ -1,0 +1,8 @@
+package interpreter;
+
+public abstract class Assets {
+	public int taxValue;
+	public int value;
+    abstract void calculateTax();
+    abstract void transfer();
+}
