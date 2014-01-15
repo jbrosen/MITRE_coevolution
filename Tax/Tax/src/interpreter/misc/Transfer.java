@@ -234,10 +234,12 @@ public class Transfer {
 				fromFound = false;
 				}
 			}
+
 		}
 //		if the asset to be transfered is an annuity
 		else if (asset.toString().equals("Annuity")){
 			this.isTaxable = false;
+			fromFound = true;
 			//no need to have cash as tax is calculated is calculated differently.
 			//no tax when paid in Annuity
 			/*
@@ -258,7 +260,7 @@ public class Transfer {
 			if(asset.getCurrentFMV() < otherAsset.getCurrentFMV()){
 				 fromFound = false;
 			 }
-			 
+
 		}
 //		if the asset to be transfered is a material
 		else if (asset.toString().equals("Material")){

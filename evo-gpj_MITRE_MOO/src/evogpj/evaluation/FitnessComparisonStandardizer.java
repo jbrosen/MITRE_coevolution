@@ -43,6 +43,7 @@ public class FitnessComparisonStandardizer {
 	public static Double getFitnessForMinimization(Individual individual,
 			String funcName, LinkedHashMap<String, FitnessFunction> fitnessFunctions) {
 		Double fitness = individual.getFitness(funcName);
+		System.out.print(funcName);
 		if (fitnessFunctions.get(funcName).isMaximizingFunction()) {
 			fitness = invert(fitness);
 		}

@@ -2,7 +2,7 @@ package tests;
 
 import static org.junit.Assert.*;
 
-import evogpj.fitness.TaxCodeFitness;
+import evogpj.evaluation.TaxCodeFitness;
 import evogpj.genotype.ListGenotype;
 import evogpj.gp.Individual;
 
@@ -351,19 +351,19 @@ public class testCases {
 		}
 	}
 	
-	@Test
+//	@Test
 	public void fitnessTest() {
 		writeFile wf = new writeFile("C:\\Users\\Jacob\\Documents\\MIT\\SCOTE\\code\\Tax\\Tax\\src\\interpreter\\output.txt");
 		ArrayList<Integer> alist = new ArrayList<Integer>();
 		ListGenotype lg = new ListGenotype(alist);
 		Individual ind1 = new Individual(lg);
 		
-		TaxCodeFitness tcf = new TaxCodeFitness(graph,wf);
+		TaxCodeFitness tcf = new TaxCodeFitness(graph);
 		tcf.eval(ind1);
 
 	}
 	
-//	@Test
+	@Test
 	public void ibob() {
 		TaxCode tc = new TaxCode();
 		tc.setAnnuityThreshold(0);

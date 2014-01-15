@@ -145,6 +145,7 @@ public final class Parameters {
 
         // INITIALIZE values
         public static final String TREE_INITIALIZE = "operator.TreeInitialize";
+        public static final String LIST_INITIALIZE = "operator.ListInitialize";
 
         // SELECTION values
         public static final String TOURNEY_SELECT = "operator.TournamentSelection";
@@ -158,6 +159,7 @@ public final class Parameters {
 
         // MUTATE values
         public static final String SUBTREE_MUTATE = "operator.SubtreeMutate";
+        public static final String LIST_MUTATE = "operator.ListMutate";
 
         // XOVER values
         public static final String BROOD_XOVER = "operator.BroodSelection";
@@ -165,6 +167,8 @@ public final class Parameters {
         public static final String SPU_XOVER = "operator.SinglePointUniformCrossover";
         // single point Koza crossover
         public static final String SPK_XOVER = "operator.SinglePointKozaCrossover";
+        // list single point crossover
+        public static final String SPL_XOVER = "operator.ListSinglePointCrossOver";
     }
 
     /**
@@ -181,8 +185,8 @@ public final class Parameters {
         public static final Boolean VERBOSE = false;
 
         
-        public static final int POP_SIZE = 1000;
-        public static final int NUM_GENS = 1000;
+        public static final int POP_SIZE = 20;
+        public static final int NUM_GENS = 10;
         public static final int TIME_OUT = 60;
         // Frequency for selecting each operator
         public static final double MUTATION_RATE = 0.1;
@@ -214,8 +218,10 @@ public final class Parameters {
         
 
         public static final int PROBLEM_SIZE = 3;
-        public static final String PROBLEM_TYPE = "SRFunction";
-        public static final String FITNESS = "fitness.SRFitness.Java, fitness.SubtreeComplexity";
+//        public static final String PROBLEM_TYPE = "SRFunction";
+        public static final String PROBLEM_TYPE = "TaxFunction";
+//        public static final String FITNESS = "fitness.SRFitness.Java, fitness.SubtreeComplexity";
+        public static final String FITNESS = "fitness.TaxFitness";
         public static final String PROBLEM = "ProblemData/TrainDatasetBalanced2.txt";
         public static final String CROSS_VAL_SET = "ProblemData/TrainDatasetBalanced2.txt";
 
@@ -234,11 +240,11 @@ public final class Parameters {
          */
         public static final boolean COERCE_TO_INT = false;
 
-        public static final String INITIALIZE = Operators.TREE_INITIALIZE;
+        public static final String INITIALIZE = Operators.LIST_INITIALIZE;
         public static final String SELECT = Operators.CROWD_SELECT;
-        public static final String MUTATE = Operators.SUBTREE_MUTATE;
+        public static final String MUTATE = Operators.LIST_MUTATE;
         public static final String EQUALIZER = Operators.TREE_DYN_EQUAL;
-        public static final String XOVER = Operators.SPU_XOVER;
+        public static final String XOVER = Operators.SPL_XOVER;
         /**
          * To handle support for multiple fitness functions, this field can be
          * filled with any number of comma-separated fitness operator class

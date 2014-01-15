@@ -1,4 +1,4 @@
-package evogpj.fitness;
+package evogpj.evaluation;
 
 import interpreter.PrintGraph;
 import interpreter.entities.Entity;
@@ -22,6 +22,7 @@ import calculator.Calculator;
 import evogpj.Parser.Parser;
 
 import evogpj.gp.Individual;
+import evogpj.gp.Population;
 
 public class TaxFitness extends FitnessFunction {
 
@@ -29,12 +30,18 @@ public class TaxFitness extends FitnessFunction {
 	private double finalTax;
 	private Graph graph;
 	
-	public TaxFitness(Graph graph,writeFile wf) {
+	public TaxFitness(Graph graph) {
 		this.startTax = 0;
 		this.finalTax = 0;
 	}
 
 	@Override
+	public void evalPop(Population pop) {
+		for (Individual individual : pop) {
+			this.eval(individual);
+		}
+	}
+	
 	public void eval(Individual ind) {
 		System.out.println("INSIDE TAX FITNESS\n");
 		ArrayList<String> transactions = new ArrayList<String>();
@@ -82,11 +89,11 @@ public class TaxFitness extends FitnessFunction {
 			}
 		}
 		
-		ind.setFitness(-finalTax);
+		ind.setFitness("TaxFitness",-finalTax);
 
 		System.out.println("FITNESS: " + ind.getFitness());
-		
-
 	}
-
+	public Boolean isMaximizingFunction() {
+		return true;
+	}
 }

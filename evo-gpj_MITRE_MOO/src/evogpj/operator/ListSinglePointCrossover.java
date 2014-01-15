@@ -23,7 +23,7 @@ public class ListSinglePointCrossover extends RandomOperator implements Crossove
 	public Population crossOver(Individual ind1, Individual ind2)
 			throws GPException {
 		System.out.println("INSIDE XOVER\n");
-
+		System.out.println(ind1.toString());
 		ArrayList<Integer> l1 = ind1.getGenotype().getGenotype();
 		ArrayList<Integer> l2 = ind2.getGenotype().getGenotype();
 		System.out.println("individual1 fitness: " + ind1.getFitness());

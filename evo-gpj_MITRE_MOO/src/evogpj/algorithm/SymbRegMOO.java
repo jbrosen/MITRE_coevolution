@@ -36,33 +36,45 @@ import evogpj.gp.GPException;
 import evogpj.gp.Individual;
 import evogpj.gp.MersenneTwisterFast;
 import evogpj.gp.Population;
+import evogpj.evaluation.TaxFitness;
+import evogpj.evaluation.TaxCodeFitness;
+
+import interpreter.misc.Graph;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
 
+import algorithm.AlgorithmBase;
+
 import evogpj.operator.Crossover;
 import evogpj.operator.CrowdedTournamentSelection;
 import evogpj.operator.Initialize;
+import evogpj.operator.ListSinglePointCrossover;
 import evogpj.operator.Mutate;
 import evogpj.operator.Select;
 import evogpj.operator.SinglePointKozaCrossover;
 import evogpj.operator.SinglePointUniformCrossover;
 import evogpj.operator.SubtreeMutate;
+import evogpj.operator.ListMutate;
 import evogpj.operator.TournamentSelection;
 import evogpj.operator.TreeInitialize;
 import evogpj.sort.CrowdingSort;
 import evogpj.sort.DominatedCount;
 import evogpj.sort.DominatedCount.DominationException;
+import evogpj.operator.ListInitialize;
 
 /**
  * This class contains the main method that runs the GP algorithm.
@@ -119,7 +131,8 @@ public class SymbRegMOO {
     protected int MEAN_POW = Parameters.Defaults.MEAN_POW;
     // METHOD EMPLOYED TO SELECT A SOLUTION FROM A PARETO FRONT
     protected String FRONT_RANK_METHOD = Parameters.Defaults.FRONT_RANK_METHOD;
-    
+//    added by jbrosen, 1/15/2014
+    protected int MAX_PRODUCTION_CHOICES = 100;
     
     // ALL THE OPERATORS USED TO BUILD GP TREES
     protected List<String> FUNC_SET = Parameters.Defaults.FUNCTIONS;
@@ -402,19 +415,26 @@ public class SymbRegMOO {
                 fitnessFunctions.put(fitnessOperatorName, esrf);
             } else if (fitnessOperatorName.equals(Parameters.Operators.SUBTREE_COMPLEXITY_FITNESS)) {
                 fitnessFunctions.put(fitnessOperatorName,new SubtreeComplexityFitness());
-            } else {
+            } else if (PROBLEM_TYPE.equals("TaxFunction")) {
+            	System.out.println("1: "+fitnessFunctions.size()+"\n");
+            	Graph graph = new Graph();
+            	fitnessFunctions.clear();
+            	if (FITNESS.equals("fitness.TaxFitness")) {
+            		fitnessFunctions.put("TaxFitness", new TaxFitness(graph));
+            	}
+            	else if (FITNESS.equals("fitness.TaxCodeFitness")) {
+            		fitnessFunctions.put("TaxCodeFitness", new TaxCodeFitness(graph));
+            	}
+            	System.out.println("2: "+fitnessFunctions.size()+"\n");
+            }
+            
+            else {
                 System.err.format("Invalid fitness function %s specified for problem type %s%n",fitnessOperatorName, PROBLEM_TYPE);
                 System.exit(-1);
             }
         }
+        initialize = new ListInitialize(rand);
 
-        TreeGenerator treeGen = new TreeGenerator(rand, FUNC_SET, TERM_SET);
-        if (INITIALIZE.equals(Parameters.Operators.TREE_INITIALIZE)) {
-            initialize = new TreeInitialize(rand, props, treeGen);
-        } else {
-            System.err.format("Invalid initialize function %s specified%n",INITIALIZE);
-            System.exit(-1);
-        }
 
         // Set up operators.
         if (SELECT.equals(Parameters.Operators.TOURNEY_SELECT)) {
@@ -426,24 +446,49 @@ public class SymbRegMOO {
             System.exit(-1);
         }
 
-        mutate = new SubtreeMutate(rand, props, treeGen);
+        mutate = new ListMutate(rand, POP_SIZE);
 
         if (XOVER.equals(Parameters.Operators.SPU_XOVER)) {
             xover = new SinglePointUniformCrossover(rand, props);
         } else if (XOVER.equals(Parameters.Operators.SPK_XOVER)) {
             xover = new SinglePointKozaCrossover(rand, props);
-        } else {
+        } else if (XOVER.equals(Parameters.Operators.SPL_XOVER)) {
+        	xover = new ListSinglePointCrossover(rand);
+        }
+        else {
             System.err.format("Invalid crossover function %s specified%n",XOVER);
             System.exit(-1);
         }
-
+		//initialize
+		int SETSIZE = POP_SIZE;
+		//int MAX_PRODUCTION_CHOICES = 100;
+		ArrayList<ArrayList> SET = new ArrayList<ArrayList>();
+		for(int i=0;i<SETSIZE;i++){
+			ArrayList<Integer> array = new ArrayList<Integer>();
+			for(int j=0;j<MAX_PRODUCTION_CHOICES;j++){
+				array.add(rand.nextInt(Integer.MAX_VALUE));
+			}
+			SET.add(array);
+		}
         // to set up equalization operator, we need to evaluate all the
         // individuals first
-        pop = initialize.initialize(POP_SIZE);
+        pop = initialize.listInitialize(POP_SIZE,SET);
         // initialize totalPop to simply the initial population
-        for (FitnessFunction f : fitnessFunctions.values())
-            f.evalPop(pop);
+        
+        Iterator it = fitnessFunctions.entrySet().iterator();
+        for (String s : fitnessFunctions.keySet() ) {
+        	System.out.println(s);
+        }
+        
+        for (FitnessFunction f : fitnessFunctions.values()) {
+        	if (f!=null) {
+            	System.out.println(f.toString());
+                f.evalPop(pop);
+        	}
+
+        }
         // calculate domination counts of initial population for tournament selection
+        System.out.println("3: "+fitnessFunctions.size()+"\n");
         try {
             DominatedCount.countDominated(pop, fitnessFunctions);
         } catch (DominationException e) {
@@ -621,104 +666,11 @@ public class SymbRegMOO {
         }
 
         String firstFitnessFunction = fitnessFunctions.keySet().iterator().next();
-        if (firstFitnessFunction.equals(Parameters.Operators.SR_JAVA_FITNESS) ){
-            //scale and save best model of each iteration
-            for(Individual ind:bestPop){
-                modelScalerJava.scaleModel(ind);
-                this.saveText(MODELS_PATH, ind.toScaledString() + "\n", true);
-            }
-            Individual acc = paretoFront.get(0);
-            Individual comp = paretoFront.get(0);
-            Individual knee = paretoFront.get(0);
-            paretoFront.calculateEuclideanDistances(fitnessFunctions);
-            for(Individual ind:paretoFront){
-                if(ind.getFitness(Parameters.Operators.SR_JAVA_FITNESS) > acc.getFitness(Parameters.Operators.SR_JAVA_FITNESS)){
-                    acc = ind;
-                }
-                if(ind.getFitness(Parameters.Operators.SUBTREE_COMPLEXITY_FITNESS) < comp.getFitness(Parameters.Operators.SUBTREE_COMPLEXITY_FITNESS)){
-                    comp = ind;
-                }
-                if(ind.getEuclideanDistance()<knee.getEuclideanDistance()){
-                    knee = ind;
-                }
-                modelScalerJava.scaleModel(ind);
-                this.saveText(PARETO_PATH, ind.toScaledString() + "\n", true);
-            }
-            this.saveText(LEAST_COMPLEX_PATH, comp.toScaledString() + "\n", true);
-            this.saveText(MOST_ACCURATE_PATH, acc.toScaledString() + "\n", true);
-            this.saveText(KNEE_PATH, knee.toScaledString() + "\n", true);
-        } else if (firstFitnessFunction.equals(Parameters.Operators.SR_CPP_FITNESS) ){
-            //scale and save best model of each iteration
-            modelScalerCpp.scalePop(bestPop);
-            for(Individual ind:bestPop){
-                this.saveText(MODELS_PATH, ind.toScaledString() + "\n", true);
-            }
-            paretoFront.calculateEuclideanDistances(fitnessFunctions);
-            modelScalerCpp.scalePop(paretoFront);
-            Individual acc = paretoFront.get(0);
-            Individual comp = paretoFront.get(0);
-            Individual knee = paretoFront.get(0);
-            for(Individual ind:paretoFront){
-                if(ind.getFitness(Parameters.Operators.SR_CPP_FITNESS) > acc.getFitness(Parameters.Operators.SR_CPP_FITNESS)){
-                    acc = ind;
-                }
-                if(ind.getFitness(Parameters.Operators.SUBTREE_COMPLEXITY_FITNESS) < comp.getFitness(Parameters.Operators.SUBTREE_COMPLEXITY_FITNESS)){
-                    comp = ind;
-                }
-                if(ind.getEuclideanDistance()<knee.getEuclideanDistance()){
-                    knee = ind;
-                }
-                this.saveText(PARETO_PATH, ind.toScaledString() + "\n", true);
-            }
-            this.saveText(LEAST_COMPLEX_PATH, comp.toScaledString() + "\n", true);
-            this.saveText(MOST_ACCURATE_PATH, acc.toScaledString() + "\n", true);
-            this.saveText(KNEE_PATH, knee.toScaledString() + "\n", true);
-            
-        } else if (firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS) 
-                || firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS_DUAL)
-                || firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS_CORRELATION)
-                || firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS_CORRELATION_DUAL)){
-            //scale and save best model of each iteration
-            modelScalerCuda.scalePop(bestPop);
-            for(Individual ind:bestPop){
-                this.saveText(MODELS_PATH, ind.toScaledString() + "\n", true);
-            }
-            paretoFront.calculateEuclideanDistances(fitnessFunctions);
-            modelScalerCuda.scalePop(paretoFront);
-            Individual acc = paretoFront.get(0);
-            Individual comp = paretoFront.get(0);
-            Individual knee = paretoFront.get(0);
-            for(Individual ind:paretoFront){
-                if(ind.getFitness(Parameters.Operators.SR_CUDA_FITNESS) > acc.getFitness(Parameters.Operators.SR_CUDA_FITNESS)){
-                    acc = ind;
-                }
-                if(ind.getFitness(Parameters.Operators.SUBTREE_COMPLEXITY_FITNESS) < comp.getFitness(Parameters.Operators.SUBTREE_COMPLEXITY_FITNESS)){
-                    comp = ind;
-                }
-                if(ind.getEuclideanDistance()<knee.getEuclideanDistance()){
-                    knee = ind;
-                }
-                this.saveText(PARETO_PATH, ind.toScaledString() + "\n", true);
-            }
-            this.saveText(LEAST_COMPLEX_PATH, comp.toScaledString() + "\n", true);
-            this.saveText(MOST_ACCURATE_PATH, acc.toScaledString() + "\n", true);
-            this.saveText(KNEE_PATH, knee.toScaledString() + "\n", true);
-        }  
-        // finally, deallocate dataset from shared memory
-        if (firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS) 
-                || firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS_DUAL)
-                || firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS_CORRELATION)
-                || firstFitnessFunction.equals(Parameters.Operators.SR_CUDA_FITNESS_CORRELATION_DUAL)) {
-                DataCuda ed = new DataCuda(PROBLEM, TARGET_NUMBER);
-                ed.deallocateDataset();
-        } else if(firstFitnessFunction.equals(Parameters.Operators.SR_CPP_FITNESS)){
-            DataCpp ed = new DataCpp(PROBLEM, TARGET_NUMBER);
-            ed.deallocateDataset();
-        }
+ 
         
         // FUSE THE PARETO FRONT WITH ARM
-        fuseParetoFront();
-        return bestOnCrossVal;
+//        fuseParetoFront();
+        return best;
     }
     
     public void fuseParetoFront(){
@@ -785,7 +737,58 @@ public class SymbRegMOO {
             System.out.println(props.toString());
             return props;
     }
+	/*
+	 * Main
+	 */
+	public static void main(String args[]) throws FileNotFoundException {
+		
+		PrintStream out;
+		
+		out = new PrintStream(new FileOutputStream("C:\\Users\\Jacob\\Documents\\MIT\\SCOTE\\MITRE_coevolution\\Tax\\Tax\\src\\interpreter\\output.txt"));
 
+		System.setOut(out);
+		String grammarFile = "";
+		Properties props = null;
+		if (args.length > 0) {
+			if(args[0].equals("TaxProperties.properties"))
+				props = loadProps(args[0]);
+			else{
+				grammarFile = args[0];
+			}
+		}
+		if (props == null) {
+			props = new Properties();
+		}
+		
+//		int num_trials = NUM_TRIALS;
+		long seed = System.currentTimeMillis();
+		
+//		if (props.containsKey("num_trials"))
+//			num_trials = Integer.valueOf(props.getProperty("num_trials"));
+		
+		if (props.containsKey("rng_seed"))
+			seed = Integer.parseInt(props.getProperty("rng_seed"));
+
+		SymbRegMOO srm;
+		
+		System.out.println("running trial ");
+		try {
+			srm = new SymbRegMOO(props, seed);
+			Individual best = srm.run_population();
+			if (best == null)
+				System.out.println("failed");
+			else
+				System.out.println("terminated with genotype: " + best.getGenotype().toString());
+				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
+		}
+		catch (IOException e) {
+			System.out.println("\nSomething's wrong\n");
+		}
+		
+	}
+    
+    
+    
     /**
      * calculate some useful statistics about the current generation of the
      * population
