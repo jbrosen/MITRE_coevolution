@@ -2,6 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="evo-gpj_MITRE/src"/>
 	<classpathentry kind="src" path="Tax/Tax/src"/>
+	<classpathentry kind="src" path="evo-gpj_MITRE_MOO/src"/>
 	<classpathentry kind="lib" path="evo-gpj_MITRE/jscheme-7.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>

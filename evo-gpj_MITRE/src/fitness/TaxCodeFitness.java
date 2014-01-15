@@ -67,7 +67,6 @@ public class TaxCodeFitness extends FitnessFunction {
 				g.printGraph((Transaction) transactionList.get(i));
 			}
 			
-
 			if (i==transactionList.size()-1){
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){

@@ -73,7 +73,7 @@ public class Parser {
 	
 	public double getAnnuityThreshold(ArrayList<Integer> genotypeList) throws IOException{
 		createMap(true);
-		System.out.println(printMap());
+//		System.out.println(printMap());
 		
 		ArrayList<Integer> genotypeList1 = generateRandomList(20);
 //		generateActions(genotypeList);

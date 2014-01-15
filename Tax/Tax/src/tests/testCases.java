@@ -1,9 +1,11 @@
 package tests;
 
 import static org.junit.Assert.*;
-import fitness.TaxCodeFitness;
-import genotype.ListGenotype;
-import gp.Individual;
+
+import evogpj.fitness.TaxCodeFitness;
+import evogpj.genotype.ListGenotype;
+import evogpj.gp.Individual;
+
 import interpreter.PrintGraph;
 import interpreter.assets.Annuity;
 import interpreter.assets.Cash;

@@ -630,8 +630,6 @@ public class AlgorithmBase {
 			else
 				System.out.println("terminated with genotype: " + best.getGenotype().toString());
 				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
-			
-		
 		}
 	}
 
