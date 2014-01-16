@@ -17,7 +17,6 @@
  */
 package evogpj.operator;
 
-import evogpj.genotype.Tree;
 import evogpj.gp.GPException;
 import evogpj.gp.Individual;
 import evogpj.gp.MersenneTwisterFast;
@@ -89,8 +88,8 @@ public class TournamentEqualization extends TournamentSelection implements Equal
 		// return true;
 		for (Individual j : pool) {
 			// if (i.getFitness() > j.getFitness()) {
-			if (((Tree) i.getGenotype()).getSize() > ((Tree) j.getGenotype())
-					.getSize() && i.getFitness() < j.getFitness()) {
+			if ( i.getGenotype().getGenotype().size() > j.getGenotype().getGenotype()
+					.size() && i.getFitness() < j.getFitness()) {
 				return false;
 			}
 		}

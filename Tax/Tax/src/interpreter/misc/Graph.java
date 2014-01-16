@@ -13,10 +13,10 @@ import interpreter.entities.TaxPayer;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 public class Graph {
 	public ArrayList<Transaction> transactionList;
 	public static ArrayList<Entity> nodesList; 
+	private boolean verbose = false;
 	
 	
 	public Graph(){
@@ -262,7 +262,8 @@ public class Graph {
 			//System.out.println("transactions: "+ t1);
 			ArrayList<String> actions = createActionsFromTransactions(t1);
 			Transaction transaction = createTransactionObject(actions);
-			System.out.println("TRANSACTION OBJECT: "+ transaction.toString());
+			if (this.verbose)
+				System.out.println("TRANSACTION OBJECT: "+ transaction.toString());
 			transactionList.add(transaction);
 		}
 	}

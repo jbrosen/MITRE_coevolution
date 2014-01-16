@@ -20,7 +20,6 @@ public class TaxPayer implements Entity{
 	private Assets assetToBeTransferred;
 	public Assets assetClone;
 
-//	why can't tax payers be taxed?
 	private boolean canBeTaxed = false;
 	
 	

@@ -20,7 +20,6 @@ package evogpj.gp;
 import evogpj.evaluation.FitnessComparisonStandardizer;
 import evogpj.evaluation.FitnessFunction;
 import evogpj.genotype.Genotype;
-import evogpj.genotype.Tree;
 import evogpj.phenotype.Phenotype;
 
 import java.io.Serializable;
@@ -308,17 +307,6 @@ public class Individual implements Serializable {
 		return this.genotype.toString();
 	}
 
-	/**
-	 * @return scaled MATLAB infix string, with appropriate rounding if necessary
-	 */
-	public String toScaledString(boolean shouldRound) {
-		String scaledModel = ((Tree) this.genotype).toScaledString();
-		return (shouldRound) ? "round(" + scaledModel + ")" : scaledModel ;
-	}
-
-	public String toScaledString() {
-		return toScaledString(false);
-	}
         
         public void setScaledCrossValFitness(double aFitness){
             this.crossValFitness = aFitness;

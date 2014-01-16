@@ -14,7 +14,7 @@ import evogpj.gp.MersenneTwisterFast;
 import evogpj.gp.Population;
 
 public class ListSinglePointCrossover extends RandomOperator implements Crossover{
-
+	private boolean verbose = false;
 	public ListSinglePointCrossover(MersenneTwisterFast rand2) {
 		super(rand2);
 	}
@@ -22,12 +22,16 @@ public class ListSinglePointCrossover extends RandomOperator implements Crossove
 	@Override
 	public Population crossOver(Individual ind1, Individual ind2)
 			throws GPException {
-		System.out.println("INSIDE XOVER\n");
-		System.out.println(ind1.toString());
+		if (this.verbose) {
+			System.out.println("INSIDE XOVER\n");
+			System.out.println(ind1.toString());
+		}
 		ArrayList<Integer> l1 = ind1.getGenotype().getGenotype();
 		ArrayList<Integer> l2 = ind2.getGenotype().getGenotype();
-		System.out.println("individual1 fitness: " + ind1.getFitness());
-		System.out.println("individual2 fitness: " + ind2.getFitness());
+		if (this.verbose) {
+			System.out.println("individual1 fitness: " + ind1.getFitness());
+			System.out.println("individual2 fitness: " + ind2.getFitness());
+		}
 		//System.out.println("individual1 : " + ind1.getGenotype().getGenotype().toString());
 
 

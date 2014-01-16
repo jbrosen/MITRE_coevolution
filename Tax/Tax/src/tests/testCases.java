@@ -351,7 +351,7 @@ public class testCases {
 		}
 	}
 	
-//	@Test
+	@Test
 	public void fitnessTest() {
 		writeFile wf = new writeFile("C:\\Users\\Jacob\\Documents\\MIT\\SCOTE\\code\\Tax\\Tax\\src\\interpreter\\output.txt");
 		ArrayList<Integer> alist = new ArrayList<Integer>();
@@ -360,10 +360,9 @@ public class testCases {
 		
 		TaxCodeFitness tcf = new TaxCodeFitness(graph);
 		tcf.eval(ind1);
-
 	}
 	
-	@Test
+//	@Test
 	public void ibob() {
 		TaxCode tc = new TaxCode();
 		tc.setAnnuityThreshold(0);

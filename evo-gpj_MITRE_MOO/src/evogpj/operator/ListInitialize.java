@@ -13,7 +13,6 @@ import evogpj.phenotype.ListPhenotype;
 import evogpj.phenotype.Phenotype;
 
 import evogpj.genotype.ListGenotype;
-import evogpj.genotype.Tree;
 import evogpj.gp.Individual;
 import evogpj.gp.MersenneTwisterFast;
 import evogpj.gp.Population;

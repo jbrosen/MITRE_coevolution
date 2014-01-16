@@ -1,3 +1,0 @@
-<clauses>::=<clause>
-<clause>::=<annuityThreshold>
-<annuityThreshold>::=0|20|50|80|90|95|99

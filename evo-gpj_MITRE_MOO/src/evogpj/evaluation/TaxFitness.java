@@ -29,6 +29,7 @@ public class TaxFitness extends FitnessFunction {
 	private double startTax;
 	private double finalTax;
 	private Graph graph;
+	private boolean verbose = false;
 	
 	public TaxFitness(Graph graph) {
 		this.startTax = 0;
@@ -43,7 +44,8 @@ public class TaxFitness extends FitnessFunction {
 	}
 	
 	public void eval(Individual ind) {
-		System.out.println("INSIDE TAX FITNESS\n");
+		if (this.verbose)
+			System.out.println("INSIDE TAX FITNESS\n");
 		ArrayList<String> transactions = new ArrayList<String>();
 		Parser p = new Parser();
 		try {
@@ -72,7 +74,7 @@ public class TaxFitness extends FitnessFunction {
 		//this.finalTax = Double.MIN_VALUE;
 		for(int i=0;i<transactionList.size();i++){
 
-			if(t.doTransfer((Transaction) transactionList.get(i))){
+			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
 				g.printGraph((Transaction) transactionList.get(i));
 			}
 			
@@ -89,9 +91,10 @@ public class TaxFitness extends FitnessFunction {
 			}
 		}
 		
-		ind.setFitness("TaxFitness",-finalTax);
-
-		System.out.println("FITNESS: " + ind.getFitness());
+		ind.setFitness("TaxFitness",-this.finalTax);
+		
+		if (this.verbose)
+			System.out.println("FITNESS: " + ind.getFitness());
 	}
 	public Boolean isMaximizingFunction() {
 		return true;

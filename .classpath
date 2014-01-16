@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="evo-gpj_MITRE/src"/>
 	<classpathentry kind="src" path="Tax/Tax/src"/>
 	<classpathentry kind="src" path="evo-gpj_MITRE_MOO/src"/>
 	<classpathentry kind="lib" path="evo-gpj_MITRE/jscheme-7.2.jar"/>
