@@ -88,4 +88,21 @@ public class DominatedCount extends Operator {
         }
         return strictlyBetter;
     }
+    
+    /**
+     * Overloaded domination method
+     * 
+     * Because we are not comparing individuals from the same population with multiple objectives (for now), 
+     */
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }

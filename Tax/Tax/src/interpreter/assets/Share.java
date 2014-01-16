@@ -41,7 +41,8 @@ public class Share extends Assets{
 		PartnerData pd = new PartnerData(this.getShare(),to.getName());
 		from.getPartnerData().add(pd);
 		if(!from.getPartners().contains(to)){
-			System.out.println("CREATING PARENT DATA");
+			if (this.verbose)
+				System.out.println("CREATING PARENT DATA");
 			from.getPartners().add(to);
 		}
 		
@@ -49,7 +50,8 @@ public class Share extends Assets{
 		pa.getOwners().put(to.getName(), this.getShare());
 		to.getPortfolio().add(pa);
 		if(!to.getPartnershipIn().contains(from)){
-			System.out.println("CREATING CHILD DATA");
+			if (this.verbose)
+				System.out.println("CREATING CHILD DATA");
 
 			to.getPartnershipIn().add(from);
 		}

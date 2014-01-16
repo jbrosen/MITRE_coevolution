@@ -22,6 +22,7 @@ public class Partnership implements Entity{
 	private final ArrayList<PartnerData> partnerData = new ArrayList<PartnerData>();
     private Assets assetToBeTransferred;
 	public Assets assetClone;
+	private boolean verbose = false;
 
 
 	private String name;
@@ -91,20 +92,24 @@ public class Partnership implements Entity{
 		return assetClone;
 	}
 	public void pushTaxToPartners(){
-		System.out.println("PUSH TAX TO PARTNERS");
+		if (this.verbose)
+			System.out.println("PUSH TAX TO PARTNERS");
 		for(PartnerData pd : this.getPartnerData()){
-			System.out.println("partners that tax needs to be pushed to:" + pd.getName());
+			if (this.verbose)
+				System.out.println("partners that tax needs to be pushed to:" + pd.getName());
 
 			for(Entity e: this.getPartners()){
 				if(e.getType().equals("Partnership") && pd.getName().equals(e.getName())){
 					double tax = (pd.getShare()/100.0)*this.getTotalTax();
 					tax+=e.getTotalTax();
 					e.setTotalTax(tax);
-					System.out.println("TAX VALUES trying to push in pship:"+tax);
+					if (this.verbose)
+						System.out.println("TAX VALUES trying to push in pship:"+tax);
 					((Partnership) e).pushTaxToPartners();
 				}
 				else if(pd.getName().equals(e.getName()) && e.getType().equals("TaxPayer")){
-					System.out.println("name of Tax Payer is:"+e.getName());
+					if (this.verbose)
+						System.out.println("name of Tax Payer is:"+e.getName());
 
 					double tax = (pd.getShare()/100.0)*this.getTotalTax();
 					
@@ -115,8 +120,8 @@ public class Partnership implements Entity{
 						tax+=e.getTotalTax();
 						e.setTotalTax(tax);
 					}
-					
-					System.out.println("TAX VALUES is not in partnership:"+tax);
+					if (this.verbose)
+						System.out.println("TAX VALUES is not in partnership:"+tax);
 				}
 			}
 		}

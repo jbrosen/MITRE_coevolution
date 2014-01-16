@@ -17,6 +17,7 @@
  */
 package evogpj.evaluation;
 
+import evogpj.gp.Individual;
 import evogpj.gp.Population;
 
 /**
@@ -51,6 +52,8 @@ public abstract class FitnessFunction {
 	 * @param pop
 	 */
 	public abstract void evalPop(Population pop);
+//	added by Jacob Rosen, 1/16/2014
+	public abstract void eval(Individual ind, Population pop);
 
 	public abstract Boolean isMaximizingFunction();
 

@@ -19,6 +19,7 @@ public abstract class Assets {
 	protected double currentFMV;
 	protected HashMap<String,Double> insideBasisMap = new HashMap<String,Double>();
 	protected HashMap<String,Double> owners = new HashMap<String,Double>();
+	protected boolean verbose = false;
 
 	public abstract void calculateTax(Entity from);
 	//public abstract double getAssetValue();

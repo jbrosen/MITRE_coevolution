@@ -42,6 +42,73 @@ public class TaxCodeFitness extends FitnessFunction {
 		}
 	}
 	
+	/**
+	 * 
+	 * sets the total fitness of a clause individual to be the sum of all transactions evaluated
+	 */
+	public void eval(Individual ind, Population pop ) {
+		double totFitness = 0.0;
+		Parser p = new Parser();
+		for (Individual i : pop) {
+			try {
+				ArrayList<String> transactions = p.getAction(i.getGenotype().getGenotype());
+				totFitness += getFitnessOfIndividual(ind, transactions);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+				
+		}
+		ind.setFitness(totFitness);
+		System.out.println("Total Fitness: "+totFitness);
+	}
+	
+	
+//	evaluate the fitness of an individual GIVEN A CERTAIN SET OF TRANSACTIONS and returns it
+	public double getFitnessOfIndividual(Individual ind, ArrayList<String> transactions ) {
+
+		double annuityThreshold=0;
+		Parser p = new Parser();
+		try {
+			annuityThreshold = p.getAnnuityThreshold(ind.getGenotype().getGenotype());
+			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Annuity Threshold: "+annuityThreshold+"\n");
+		
+		TaxCode tc = new TaxCode();
+		tc.setAnnuityThreshold(annuityThreshold);
+		
+		Graph graph = new Graph();
+		ArrayList<Entity> nodesList = graph.getNodes();
+		graph.createAction(transactions);
+//		graph.setTransactions(transactions);
+		ArrayList<Transaction> transactionList = graph.getTransactions();
+		Transfer t = new Transfer(nodesList, tc);
+		Calculator c = new Calculator(nodesList);
+		PrintGraph g = new PrintGraph(nodesList);
+		
+		for(int i=0;i<transactionList.size();i++){
+
+			if(t.doTransfer((Transaction) transactionList.get(i))){
+				g.printGraph((Transaction) transactionList.get(i));
+			}
+			
+			if (i==transactionList.size()-1){
+				for(int j=0;j<nodesList.size();j++){
+					if(nodesList.get(j).getType().equals("TaxPayer")){
+						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
+							this.finalTax = nodesList.get(j).getTotalTax();
+						}
+						break;
+					}
+				}
+			}
+		}
+//		ind.setFitness("TaxCodeFitness",finalTax);
+		return finalTax;
+	}
+	
 	public void eval(Individual ind) {
 		System.out.println("INSIDE TAX CODE FITNESS\n");
 		ArrayList<Transaction> transactions = getiBob();
@@ -88,7 +155,6 @@ public class TaxCodeFitness extends FitnessFunction {
 		ind.setFitness("TaxCodeFitness",finalTax);
 
 		System.out.println("FITNESS: " + ind.getFitness());
-		
 	}
 
 	

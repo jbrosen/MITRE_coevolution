@@ -90,10 +90,11 @@ public final class Parameters {
          * verbosity flag. Helpful for debugging.
          */
         public static final Boolean VERBOSE = false;
+        public static final Boolean CO_EVO = true;
 
         
-        public static final int POP_SIZE = 50;
-        public static final int NUM_GENS = 10;
+        public static final int POP_SIZE = 10;
+        public static final int NUM_GENS = 5;
         public static final int TIME_OUT = 60;
         // Frequency for selecting each operator
         public static final double MUTATION_RATE = 0.1;
@@ -109,13 +110,16 @@ public final class Parameters {
         public static final int TOURNEY_SIZE = 7;
 
         public static final String FITNESS = "fitness.TaxFitness";
+//        used for co-evolution
+        public static final String OTHER_FITNESS = "fitness.TaxCodeFitness";
+        
         /**
          * the initial seed to use for the rng in the algorithm.
          */
         public static final long SEED = System.currentTimeMillis();
 
         public static final String INITIALIZE = Operators.LIST_INITIALIZE;
-        public static final String SELECT = Operators.CROWD_SELECT;
+        public static final String SELECT = Operators.TOURNEY_SELECT;
         public static final String MUTATE = Operators.LIST_MUTATE;
         public static final String XOVER = Operators.SPL_XOVER;
 

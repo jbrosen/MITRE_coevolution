@@ -292,7 +292,7 @@ public class Transfer {
 //					if the two assets also have the same name REDUNDANCY
 					if(((Material) fromAsset).getName().equals(((Material) asset).getName())){
 //						set everything to be transfered
-//						fromAsset.setCurrentFMV(200*this.taxCode.getAnnuityThreshold());	// TEST
+						fromAsset.setCurrentFMV(200*this.taxCode.getAnnuityThreshold());	// TEST
 						from.setAssetToBeTransferred(fromAsset);
 						from.setAssetToBeTransferredClone(new Material((Material) fromAsset));
 						fromFound = true;

@@ -55,7 +55,8 @@ public class Cash extends Assets{
 
 	
 			if(otherAsset.toString().equals("Share")){
-				System.out.println("SHARE");
+				if (this.verbose)
+					System.out.println("SHARE");
 				
 				this.setInsideBasis(this.getCurrentFMV());
 				for(String s : from.getAssetToBeTransferredClone().getOwners().keySet()){
@@ -67,7 +68,6 @@ public class Cash extends Assets{
 
 				if(to.getType().equals("Partnership")){
 				
-					System.out.println("BADAR:"+ this.getCurrentFMV());
 
 					//to Entity
 					//calculate the share of each partner.

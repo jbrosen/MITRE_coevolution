@@ -43,6 +43,72 @@ public class TaxFitness extends FitnessFunction {
 		}
 	}
 	
+	public void eval(Individual ind, Population pop) {
+		double totFitness = 0.0;
+		Parser p = new Parser();
+		for (Individual i : pop) {
+			try{
+				double annThresh = p.getAnnuityThreshold(i.getGenotype().getGenotype());
+				TaxCode tc = new TaxCode();
+				tc.setAnnuityThreshold(annThresh);
+				totFitness += getFitnessOfIndividual(ind, tc);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		ind.setFitness(totFitness);
+	}
+	
+	public double getFitnessOfIndividual(Individual ind, TaxCode tc ) {
+		ArrayList<String> transactions = new ArrayList<String>();
+		Parser p = new Parser();
+		try {
+			transactions = p.getAction(ind.getGenotype().getGenotype());
+			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		Graph graph = new Graph();
+		ArrayList<Entity> nodesList = graph.getNodes();
+		graph.createAction(transactions);
+		ArrayList<Transaction> transactionList = graph.getTransactions();
+		
+		Transfer t = new Transfer(nodesList, tc);
+		Calculator c = new Calculator(nodesList);
+		PrintGraph g = new PrintGraph(nodesList);
+		
+		/*for(int j=0;j<nodesList.size();j++){
+			if(nodesList.get(j).getType().equals("TaxPayer")){
+				this.startTax = nodesList.get(j).getStartTax();
+				System.out.println("Start Tax: " + this.startTax);
+				break;
+			}
+		}*/
+		//this.finalTax = Double.MIN_VALUE;
+		for(int i=0;i<transactionList.size();i++){
+//			HOW TO ADDRESS ILLEGAL TRANSACTIONS
+			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
+				g.printGraph((Transaction) transactionList.get(i));
+			}
+			
+
+			if (i==transactionList.size()-1){
+				for(int j=0;j<nodesList.size();j++){
+					if(nodesList.get(j).getType().equals("TaxPayer")){
+						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
+							this.finalTax = nodesList.get(j).getTotalTax();
+						}
+						break;
+					}
+				}
+			}
+		}
+		
+		return -finalTax;
+	}
+	
+	
 	public void eval(Individual ind) {
 		if (this.verbose)
 			System.out.println("INSIDE TAX FITNESS\n");
@@ -60,6 +126,7 @@ public class TaxFitness extends FitnessFunction {
 		ArrayList<Entity> nodesList = graph.getNodes();
 		graph.createAction(transactions);
 		ArrayList<Transaction> transactionList = graph.getTransactions();
+		
 		Transfer t = new Transfer(nodesList, new TaxCode());
 		Calculator c = new Calculator(nodesList);
 		PrintGraph g = new PrintGraph(nodesList);

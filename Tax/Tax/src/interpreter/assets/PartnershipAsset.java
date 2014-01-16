@@ -121,10 +121,13 @@ public class PartnershipAsset extends Assets{
 	
 	@Override
 	public void calculateTax(Entity from) {
-		System.out.println("CALCULATING TAX FOR PASSET");
+		if (this.verbose)
+			System.out.println("CALCULATING TAX FOR PASSET");
 		Double diff = this.getCurrentFMV() - this.getOutsideBasis();
-		System.out.println("THE CFMV IS:"+ this.getCurrentFMV());
-		System.out.println("DIFF IS:"+ diff);
+		if (this.verbose) {
+			System.out.println("THE CFMV IS:"+ this.getCurrentFMV());
+			System.out.println("DIFF IS:"+ diff);
+		}
 
 		if(from.getType().equals("TaxPayer")){
 
@@ -137,7 +140,8 @@ public class PartnershipAsset extends Assets{
 		}
 		else if(from.getType().equals("Partnership")){
 			from.setTotalTax(from.getTotalTax() + diff);
-			System.out.println("NOW PUSH TAX UPWARDS");
+			if (this.verbose)
+				System.out.println("NOW PUSH TAX UPWARDS");
 
 			((Partnership) from).pushTaxToPartners();
 		}
@@ -146,7 +150,8 @@ public class PartnershipAsset extends Assets{
 
 	@Override
 	public void transfer(Entity from, Entity to,Assets otherAsset) {
-		System.out.println("from: " + from.getName() + " -->" + " to: " + to.getName());
+		if (this.verbose)
+			System.out.println("from: " + from.getName() + " -->" + " to: " + to.getName());
 		
 
 		boolean fromFound = false;
@@ -173,8 +178,8 @@ public class PartnershipAsset extends Assets{
 	 * Update 
 	 */
 	public void update(Entity from, Entity to,Assets otherAsset){
-		
-		System.out.println("UPDATE");
+		if (this.verbose)
+			System.out.println("UPDATE");
 		//System.exit(0);
 		printPAsset();
 		
@@ -184,7 +189,8 @@ public class PartnershipAsset extends Assets{
 		for(Entity p: part){
 			if(p.getName().equals(this.getName())){
 				child = p;
-				System.out.println("CHILD : " + child.getName());
+				if (this.verbose)
+					System.out.println("CHILD : " + child.getName());
 				break;
 			}
 		}
