@@ -19,7 +19,6 @@ package evogpj.algorithm;
 
 import evogpj.evaluation.FitnessFunction;
 
-
 import evogpj.gp.GPException;
 import evogpj.gp.Individual;
 import evogpj.gp.MersenneTwisterFast;
@@ -31,7 +30,6 @@ import interpreter.misc.Graph;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -45,10 +43,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 
@@ -94,7 +90,6 @@ public class SymbRegMOO {
     // DEFAULT CROSSOVER OPERATOR
 
     protected String FITNESS = Parameters.Defaults.FITNESS;
-    protected String OTHER_FITNESS = Parameters.Defaults.OTHER_FITNESS;
 
 //    added by jbrosen, 1/15/2014
     protected int MAX_PRODUCTION_CHOICES = 100;
@@ -116,18 +111,7 @@ public class SymbRegMOO {
     // BEST INDIVIDUAL OF EACH GENERATION
     protected Population bestPop;
     
-    /* Co-evolution stuffs, testing for now*/
-//  ARE WE CO-EVOLVING?
-    protected boolean CO_EVO = Parameters.Defaults.CO_EVO;
-    
-    protected LinkedHashMap<String, ListInitialize> initializers;
-    protected LinkedHashMap<String, Population> pops;
-    protected LinkedHashMap<String, Population> bestPops;
-    protected LinkedHashMap<String, Individual> bestOnes;
-    protected LinkedHashMap<String, Population> childPops;
-    protected LinkedHashMap<String, Population> totalPops;
-    
-    
+
     /* OPERATORS EMPLOYED IN THE SEARCH PROCESS */
     // RANDOM NUMBER GENERATOR
     protected MersenneTwisterFast rand;
@@ -140,7 +124,7 @@ public class SymbRegMOO {
     // MUTATION
     protected Mutate mutate;
     // FITNESS FUNCTIONS
-    protected LinkedHashMap<String, FitnessFunction> fitnessFunctions;
+    protected FitnessFunction fitnessFunction;
     
     
     /* CONTROL FOR END OF EVOLUTIONARY PROCESS*/
@@ -148,10 +132,6 @@ public class SymbRegMOO {
     protected Integer generation;
     // CONTROL FOR END OF PROCESS
     protected Boolean finished;
-    // NUMBER OF GENERATIONS WITHOUT FITNESS IMPROVEMENT
-    protected int counterConvergence;
-    // CURRENT FITNESS OF BEST INDIVIDUAL
-    protected double lastFitness;
     
 
     /**
@@ -214,11 +194,8 @@ public class SymbRegMOO {
      * Empty constructor, to allow subclasses to override
      */
     public SymbRegMOO() {
-        fitnessFunctions = new LinkedHashMap<String, FitnessFunction>();
         finished = false;
         generation = 0;
-        counterConvergence = 0;
-        lastFitness = 0;
         startTime = System.currentTimeMillis();
     }
 
@@ -259,6 +236,7 @@ public class SymbRegMOO {
         return fitnessOperators;
     }
 
+    
     /**
      * Create all the operators from the loaded params. Seed is the seed to use
      * for the rng. If specified, d_in is some DataJava to use. Otherwise, d_in
@@ -267,38 +245,26 @@ public class SymbRegMOO {
      * @param seed
      * 
      */
+    
     private void create_operators(Properties props, long seed) throws IOException {
-    	boolean verbose = false;
+    	
     	System.out.println("Running evogpj with seed: " + seed);
         rand = new MersenneTwisterFast(seed);
     	Graph graph = new Graph();
-    	fitnessFunctions.clear();
     	
     	
-    	if (!CO_EVO) {
-	     	if (FITNESS.equals("fitness.TaxFitness")) {
-	    		fitnessFunctions.put("TaxFitness", new TaxFitness(graph));
-	    	}
-	    	else if (FITNESS.equals("fitness.TaxCodeFitness")) {
-	    		fitnessFunctions.put("TaxCodeFitness", new TaxCodeFitness(graph));
-	    	}
-	     	
-	     	initialize = new ListInitialize(rand);
-	     	
-	     	
-	     	
-	     	
-	     	
-	     	
+     	if (FITNESS.equals("fitness.TaxFitness")) {
+     		fitnessFunction = new TaxFitness(graph);
+    	}
+    	else if (FITNESS.equals("fitness.TaxCodeFitness")) {
+    		fitnessFunction = new TaxCodeFitness(graph);
     	}
     	else {
-    		fitnessFunctions.put("TaxFitness", new TaxFitness(graph));
-    		fitnessFunctions.put("TaxCodeFitness", new TaxCodeFitness(graph));
-//          NOTE: both populations use same random number for initializer, maybe change in the future
-    		initializers = new LinkedHashMap<String, ListInitialize>();
-        	initializers.put("TaxFitness",new ListInitialize(rand));
-        	initializers.put("TaxCodeFitness",new ListInitialize(rand));
+    		System.out.print("Invalid Fitness Function Operator");
+    		System.exit(-1);
     	}
+     	
+     	initialize = new ListInitialize(rand);
     	
 
         // Set up operators.
@@ -317,6 +283,7 @@ public class SymbRegMOO {
 		//initialize
 		int SETSIZE = POP_SIZE;
 		//int MAX_PRODUCTION_CHOICES = 100;
+		
 		ArrayList<ArrayList> SET = new ArrayList<ArrayList>();
 		for(int i=0;i<SETSIZE;i++){
 			ArrayList<Integer> array = new ArrayList<Integer>();
@@ -326,65 +293,12 @@ public class SymbRegMOO {
 			SET.add(array);
 		}
 		
-		
-		if (!CO_EVO) {
+
 	        // to set up equalization operator, we need to evaluate all the
 	        // individuals first
-	        pop = initialize.listInitialize(POP_SIZE,SET);
-		}
-		
-		
-//        initialize both populations by iterating through the initializers hashmap
-		else {
-        	pops = new LinkedHashMap<String, Population>();
-        	Iterator it = initializers.entrySet().iterator();
-        	while (it.hasNext()) {
-        		Map.Entry pairs = (Map.Entry)it.next();
-        		ListInitialize init = (ListInitialize)pairs.getValue();
-        		System.out.println((String)pairs.getKey());
-        		
-        		pops.put((String)pairs.getKey(),init.listInitialize(POP_SIZE,SET));
-        	}
-        }
-        // initialize totalPop to simply the initial population
+        pop = initialize.listInitialize(POP_SIZE,SET);
         
-        if (!CO_EVO) {
-	        for (FitnessFunction f : fitnessFunctions.values()) {
-	        	if (f!=null) {
-	                f.evalPop(pop);
-	        	}
-	        }
-        }
-        
-        
-//        for each fitness function (key), evaluate both populations using the corresponding fitness function
-//        NEVER MIND, had to be more complicated eventually
-        else {
-//        	get the two population names in an ArrayList
-        	ArrayList<String> fitnessNames = new ArrayList<String>(fitnessFunctions.keySet());
-//        	This is where the population subset selector is going to go (SelectPop interface)
-//        	for now, just select the whole other population
-        	Population schemes = pops.get(fitnessNames.get(0));
-        	Population clauses = pops.get(fitnessNames.get(1));
-//        	first evaluate fitness for all of the schemes against all of the clauses
-        	FitnessFunction f1 = (FitnessFunction)fitnessFunctions.get(fitnessNames.get(0));
-        	for (Individual ind : pops.get(fitnessNames.get(0))) {
-        		f1.eval(ind, clauses);
-        	}
-//        	next, evaluate fitness for all of the clauses against all of the schemes
-        	FitnessFunction f2 = (FitnessFunction)fitnessFunctions.get(fitnessNames.get(1));
-        	for (Individual ind : pops.get(fitnessNames.get(1))) {
-        		f2.eval(ind, schemes);
-        	}
-//        	sort the two populations in descending order by fitness and set domination count as the index in the list because it is the number
-//        	of individuals that have a higher fitness than them
-        	Collections.sort(schemes, new FitnessComparator());
-        	Collections.sort(clauses, new FitnessComparator());
-        	for (int i=0 ; i<schemes.size() ; ++i )
-        		schemes.get(i).setDominationCount(i);
-        	for (int i=0 ; i<clauses.size() ; ++i )
-        		clauses.get(i).setDominationCount(i);
-        }
+        fitnessFunction.evalPop(pop);
         
         
         /*
@@ -393,33 +307,10 @@ public class SymbRegMOO {
          * which we do above
          */
         // calculate domination counts of initial population for tournament selection
-        if (!CO_EVO) {
-	        try {
-	            DominatedCount.countDominated(pop, fitnessFunctions);
-	        } catch (DominationException e) {
-	            System.exit(-1);
-	        }
-	        // save first front of initial population
-	        // calculate crowding distances of initial population for crowding sort
-	        if (SELECT.equals(Parameters.Operators.CROWD_SELECT)) {
-	            CrowdingSort.computeCrowdingDistances(pop, fitnessFunctions);
-	        }
+        Collections.sort(pop, new FitnessComparator());
+        for (int i = 0 ; i < POP_SIZE ; ++i) {
+        	pop.get(i).setDominationCount(i);
         }
-//        Just use tournament selector for now when running co-evolution, not sure if I have to do anything else with it though
-        else {
-        	
-        }
-        
-        
-
-    }
-
-    /**
-     * Accept potential migrants into the population
-     * @param migrants
-     */
-    protected void acceptMigrants(Population migrants) {
-            pop.addAll(migrants);
     }
 	
     /**
@@ -468,117 +359,26 @@ public class SymbRegMOO {
                 }
             } 
         }
-        // evaluate all children
-        for (String fname : fitnessFunctions.keySet()) {
-            FitnessFunction f = fitnessFunctions.get(fname);
-            f.evalPop(childPop);
-        }
+        
+        fitnessFunction.evalPop(childPop);
+        
         // combine the children and parents for a total of 2*POP_SIZE
         totalPop = new Population(pop, childPop);
-        try {
-            // for each individual, count number of individuals that dominate it
-            DominatedCount.countDominated(totalPop, fitnessFunctions);
-        } catch (DominationException e) {
-                System.exit(-1);
+        
+        // calculate domination counts of initial population for tournament selection
+        Collections.sort(totalPop, new FitnessComparator());
+        for (int i = 0 ; i < totalPop.size() ; ++i) {
+        	totalPop.get(i).setDominationCount(i);
         }
-        // if crowding tournament selection is enabled, calculate crowding distances
-        if (SELECT.equals(Parameters.Operators.CROWD_SELECT)) {
-            CrowdingSort.computeCrowdingDistances(totalPop, fitnessFunctions);
-        }
-        // sort the entire 2*POP_SIZE population by domination count and by crowding distance if enabled
-        totalPop.sort(SELECT.equals(Parameters.Operators.CROWD_SELECT));
-
-        // use non-dominated sort to take the POP_SIZE best individuals
-        // also find the latest pareto front
+        
         pop = new Population();
-        paretoFront = new Population();
-        for (int index = 0; index < POP_SIZE; index++) {
-            Individual individual = totalPop.get(index);
-            pop.add(individual);
-            // also save the first front for later use
-            if (individual.getDominationCount().equals(0))
-                paretoFront.add(individual);
+        for (int i =0 ; i < POP_SIZE ; ++i) {
+        	pop.add(totalPop.get(i));
         }
-        // find best individual
-        pop.calculateEuclideanDistances(fitnessFunctions);
+
         best = pop.get(0);
-        for (int index = 0; index < POP_SIZE; index++) {
-            Individual individual = pop.get(index);
-            if(individual.getFitness() > best.getFitness()){
-                best = individual;
-            }
-        }
     }
-    protected void step_evo() throws GPException {
-//    	get the names of the two fitness functions
-    	ArrayList<String> fitnessNames = new ArrayList<String>(fitnessFunctions.keySet());
-//    	for both populations, this is basically the same as the previous step method
-    	for (String fit : fitnessNames) {
-	        // generate children from previous population. don't use elitism
-	        // here since that's done later
-	        childPop = new Population();
-	        Population children;
-	    	
-//	        get the population that is evaluated the fitness function fit
-	        Population thisPop = pops.get(fit);
-	        while (childPop.size() < POP_SIZE) {
-//	        	pick a random individual from that population using selection algorithm specified in Parameters class
-	            Individual p1 = select.select(thisPop);
-	            double prob = rand.nextDouble();
-	            // Crossover with some probability
-	            if (prob < XOVER_RATE) {
-//	            	use crossover and selection method chosen in Parameters class
-	                Individual p2 = select.select(thisPop);
-	                children = xover.crossOver(p1, p2);
-	                for (Individual ind : children) {    
-	                    if(!ind.equals(p1) && !ind.equals(p2) && (childPop.size() < POP_SIZE)){
-	                        childPop.add(ind);
-	                    }
-	                }
-	            } else if (prob < MUTATION_RATE + XOVER_RATE) {
-	                Individual ind = mutate.mutate(p1);
-	                if(!ind.equals(p1) && (childPop.size() < POP_SIZE)){
-	                    childPop.add(ind);
-	                }
-	            } 
-	        }
-	        
 
-//	        Compare each individual from both populations to all individuals from the other
-//	        pretty kludgy, fix later
-	        Population otherPop;
-	        if (fit == "TaxFitness")
-	        	otherPop = (Population)pops.get("TaxCodeFitness");
-	        else
-	        	otherPop = (Population)pops.get("TaxFitness");
-	        FitnessFunction f = (FitnessFunction)fitnessFunctions.get(fit);
-	        for (Individual ind : childPop) {
-	        	f.eval(ind, otherPop);
-	        }
-	        
-	        
-//	        Combine the child population and the last population and sort them by fitness
-	        Population tmpTotalPop = new Population(thisPop,childPop);
-	        Collections.sort(tmpTotalPop, new FitnessComparator());
-	        for (int i=0 ; i<tmpTotalPop.size(); ++i) {
-	        	tmpTotalPop.get(i).setDominationCount(i);
-	        }
-	        
-	        
-//	        JUST make the first (best) POP_SIZE elements of tmpTotalPop the new population
-	        Population newPop = new Population();
-	        for (int i=0 ; i<POP_SIZE ; ++i) {
-	        	newPop.add(tmpTotalPop.get(i));
-	        }
-	        pops.put(fit, newPop);
-	        
-
-//	        BECAUSE there is only one fitness function, we can just pull the first from the list, which will be the best
-//	        fitnessed individual
-//			NOTE this could cause problems, possibly go back to this
-	        bestOnes.put(fit, newPop.get(0));
-    	}
-    }
 
     /**
      * get the best individual per generation in a Population object
@@ -593,58 +393,7 @@ public class SymbRegMOO {
     * 
     * @return the best individual found.
     */
-    public LinkedHashMap<String,Individual> run_population_evo() throws IOException {
-//        make this into a hashmap of new populations
-//        bestPop = new Population();
-    	
-//    	Hashmap of the best population that accumulates over the generations of the two populations
-    	bestPops = new LinkedHashMap<String,Population>();
-        bestPops.put("TaxFitness", new Population());
-        bestPops.put("TaxCodeFitness", new Population());
-//        to record the best individuals from each generation
-        bestOnes = new LinkedHashMap<String,Individual>();
-        
-//        add the best initial individual scheme to its bestPops element
-        Population schemes = (Population)pops.get("TaxFitness");
-        bestOnes.put("TaxFitness",schemes.get(0));
-        Population bestSchemes = (Population)bestPops.get("TaxFitness");
-        bestSchemes.add(schemes.get(0));
-        
-//        add the best initial individual clause to its bestPops element
-        Population clauses = (Population)pops.get("TaxCodeFitness");
-        bestOnes.put("TaxCodeFitness",clauses.get(0));
-        Population bestClauses = (Population)bestPops.get("TaxCodeFitness");
-        bestClauses.add(clauses.get(0));
-        
-        
-        long timeStamp = (System.currentTimeMillis() - startTime) / 1000;
-        System.out.println("ELAPSED TIME: " + timeStamp);
-//        step_evo for each generation (see above)
-        while ((generation <= NUM_GENS) && (!finished)) {
-            System.out.format("Generation %d\n", generation);
-            System.out.flush();
-            try {
-                step_evo();
-            } catch (GPException e) {
-                System.exit(-1);
-            }
-//            get the best overall scheme and clause from the generation and add it to the bestOnes HashMap
-            Individual bestScheme = (Individual)bestOnes.get("TaxFitness");
-            bestSchemes = (Population)bestPops.get("TaxFitness");
-            bestSchemes.add(bestScheme);
-            
-            Individual bestClause = (Individual)bestOnes.get("TaxCodeFitness");
-            bestClauses = (Population)bestPops.get("TaxCodeFitness");
-            bestClauses.add(bestClause);
-            
-            timeStamp = (System.currentTimeMillis() - startTime) / 1000;
-            System.out.println("ELAPSED TIME: " + timeStamp);
-            generation++;
-            finished = stopCriteria();
-            
-        }
-        return bestOnes;
-    }
+
     /**
     * Run the current population for the specified number of generations.
     * 
@@ -673,6 +422,8 @@ public class SymbRegMOO {
             System.out.format("Best individual for generation %d:%n", generation);
             double MSE = best.getFitness();
             MSE = ((1-MSE) / (MSE + 1));
+            System.out.println("Genotype: "+best.getGenotype().toString());
+            System.out.println("Phenotype: "+best.getPhenotype().getPhenotype());
             System.out.println(best.getFitnesses());
             System.out.println(MSE);
             System.out.flush();
@@ -686,18 +437,15 @@ public class SymbRegMOO {
         return best;
     }
     
-    
-    
     public boolean stopCriteria(){
         boolean stop = false;
         if( System.currentTimeMillis() >= TIMEOUT){
             System.out.println("Timout exceeded, exiting.");
             return true;
         }
-        String firstFitnessFunction = fitnessFunctions.keySet().iterator().next();
         return stop;
     }
-        
+    
     public static Properties loadProps(String propFile) {
             Properties props = new Properties();
             BufferedReader f;
@@ -710,8 +458,8 @@ public class SymbRegMOO {
                     props.load(f);
             } catch (IOException e) {
             }
-            boolean verbose = false;
-            if (verbose)
+            
+            if (Parameters.Defaults.VERBOSE)
             	System.out.println(props.toString());
             return props;
     }
@@ -726,7 +474,6 @@ public class SymbRegMOO {
 	 */
 	public static void main(String args[]) throws FileNotFoundException {
 		boolean bash = false;
-		boolean co_evolve = true;
 //		different output stream depending on whether running from local machine or VM
 		PrintStream out;
 		String t_stamp = getCurrentTimestamp();
@@ -738,15 +485,12 @@ public class SymbRegMOO {
 			out = new PrintStream(new FileOutputStream("output_"+t_stamp+".txt"));
 		}
 		
-//		System.setOut(out);
-		String grammarFile = "";
+		System.setOut(out);
+		
 		Properties props = null;
 		if (args.length > 0) {
 			if(args[0].equals("TaxProperties.properties"))
 				props = loadProps(args[0]);
-			else{
-				grammarFile = args[0];
-			}
 		}
 		if (props == null) {
 			props = new Properties();
@@ -758,40 +502,23 @@ public class SymbRegMOO {
 			seed = Integer.parseInt(props.getProperty("rng_seed"));
 
 		SymbRegMOO srm;
-		
 		System.out.println("running trial ");
 		try {
 			srm = new SymbRegMOO(props, seed);
-				if (!co_evolve) {
-					Individual best = srm.run_population();
-					if (best == null)
-						System.out.println("failed");
-					else
-						System.out.println("terminated with genotype: " + best.getGenotype().toString());
-						System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
-				}
-				else {
-					LinkedHashMap<String,Individual> bests = srm.run_population_evo();
-					ArrayList<String> fitnessNames = new ArrayList<String>(bests.keySet());
-					for (String fname : fitnessNames) {
-						Individual bestOne = (Individual)bests.get(fname);
-						if (bestOne == null) {
-							System.out.println("failed for fitness function "+fname);
-						}
-						else {
-							System.out.println("Info for fitness function "+fname);
-							System.out.println("terminated with genotype: " + bestOne.getGenotype().toString());
-							System.out.println("terminated with phenotype: " + bestOne.getPhenotype().getPhenotype());
-						}
-					}
-				}
+			
+			Individual best = srm.run_population();
+			if (best == null)
+				System.out.println("failed");
+			else
+				System.out.println("terminated with genotype: " + best.getGenotype().toString());
+				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
+			
+
 		}
 		catch (IOException e) {
 			System.out.println("\nSomething's wrong\n");
 		}
 	}
-    
-    
     
     /**
      * calculate some useful statistics about the current generation of the
@@ -823,7 +550,7 @@ public class SymbRegMOO {
         std_l = Math.sqrt(std_l / pop.size());
         return String.format("%.5f %.5f %f %f %9.5f %9.5f", mean_f, std_f,min_f, max_f, mean_l, std_l);
     }
-        
+    
     /**
      * Save text to a filepath
      * @param filepath

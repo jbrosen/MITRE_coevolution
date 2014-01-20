@@ -3,36 +3,28 @@ package evogpj.evaluation;
 import interpreter.PrintGraph;
 import interpreter.entities.Entity;
 import interpreter.entities.TaxPayer;
-import interpreter.misc.Actions;
 import interpreter.misc.Graph;
 import interpreter.misc.Transaction;
 import interpreter.misc.Transfer;
-import interpreter.misc.writeFile;
 import interpreter.taxCode.TaxCode;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import evogpj.phenotype.ListPhenotype;
 
-import calculator.Calculator;
 import evogpj.Parser.Parser;
 
+import evogpj.algorithm.Parameters;
 import evogpj.gp.Individual;
 import evogpj.gp.Population;
 
 public class TaxFitness extends FitnessFunction {
 
-	private double startTax;
 	private double finalTax;
-	private Graph graph;
-	private boolean verbose = false;
+	private boolean verbose = Parameters.Defaults.VERBOSE;
 	
 	public TaxFitness(Graph graph) {
-		this.startTax = 0;
 		this.finalTax = 0;
 	}
 
@@ -59,12 +51,16 @@ public class TaxFitness extends FitnessFunction {
 		ind.setFitness(totFitness);
 	}
 	
+	/*
+	 * Given an individual and a tax code, returns the fitness of the individual when compared to that tax code
+	 */
 	public double getFitnessOfIndividual(Individual ind, TaxCode tc ) {
 		ArrayList<String> transactions = new ArrayList<String>();
 		Parser p = new Parser();
 		try {
 			transactions = p.getAction(ind.getGenotype().getGenotype());
 			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
+//			System.out.println(p.getPhenotype());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -75,25 +71,26 @@ public class TaxFitness extends FitnessFunction {
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
 		Transfer t = new Transfer(nodesList, tc);
-		Calculator c = new Calculator(nodesList);
 		PrintGraph g = new PrintGraph(nodesList);
 		
-		/*for(int j=0;j<nodesList.size();j++){
-			if(nodesList.get(j).getType().equals("TaxPayer")){
-				this.startTax = nodesList.get(j).getStartTax();
-				System.out.println("Start Tax: " + this.startTax);
-				break;
-			}
-		}*/
-		//this.finalTax = Double.MIN_VALUE;
+		
 		for(int i=0;i<transactionList.size();i++){
 //			HOW TO ADDRESS ILLEGAL TRANSACTIONS
 			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
 				g.printGraph((Transaction) transactionList.get(i));
 			}
 			
-
 			if (i==transactionList.size()-1){
+				boolean finalTrans = false;
+				Transaction finalTransaction = graph.getFinalTransaction();
+				if (finalTransaction != null) {
+					if (t.doTransfer(finalTransaction)) {
+						g.printGraph(finalTransaction);
+						finalTrans = true;
+					}
+				}
+				
+				
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){
 						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
@@ -102,12 +99,60 @@ public class TaxFitness extends FitnessFunction {
 						break;
 					}
 				}
+				if (!finalTrans)
+					this.finalTax = Double.MAX_VALUE;
 			}
 		}
-		
 		return -finalTax;
 	}
 	
+//	test using ArrayList of transaction strings and anniuty threshold
+	public double getFitnessOfIndividual(ArrayList<String> transactions, double annuityThreshold) {
+
+		
+		Graph graph = new Graph();
+		ArrayList<Entity> nodesList = graph.getNodes();
+		graph.createAction(transactions);
+		ArrayList<Transaction> transactionList = graph.getTransactions();
+		TaxCode tc = new TaxCode();
+		tc.setAnnuityThreshold(annuityThreshold);
+		
+		
+		Transfer t = new Transfer(nodesList, tc);
+		PrintGraph g = new PrintGraph(nodesList);
+		
+		
+		for(int i=0;i<transactionList.size();i++){
+//			HOW TO ADDRESS ILLEGAL TRANSACTIONS
+			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
+				g.printGraph((Transaction) transactionList.get(i));
+			}
+			
+			if (i==transactionList.size()-1){
+				boolean finalTrans = false;
+				Transaction finalTransaction = graph.getFinalTransaction();
+				if (finalTransaction != null) {
+					if (t.doTransfer(finalTransaction)) {
+						g.printGraph(finalTransaction);
+						finalTrans = true;
+					}
+				}
+				
+				
+				for(int j=0;j<nodesList.size();j++){
+					if(nodesList.get(j).getType().equals("TaxPayer")){
+						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
+							this.finalTax = nodesList.get(j).getTotalTax()+annuityThreshold;
+						}
+						break;
+					}
+				}
+				if (!finalTrans)
+					this.finalTax = Double.MAX_VALUE;
+			}
+		}
+		return -finalTax;
+	}
 	
 	public void eval(Individual ind) {
 		if (this.verbose)
@@ -125,28 +170,31 @@ public class TaxFitness extends FitnessFunction {
 		Graph graph = new Graph();
 		ArrayList<Entity> nodesList = graph.getNodes();
 		graph.createAction(transactions);
+		
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
 		Transfer t = new Transfer(nodesList, new TaxCode());
-		Calculator c = new Calculator(nodesList);
+		
 		PrintGraph g = new PrintGraph(nodesList);
 		
-		/*for(int j=0;j<nodesList.size();j++){
-			if(nodesList.get(j).getType().equals("TaxPayer")){
-				this.startTax = nodesList.get(j).getStartTax();
-				System.out.println("Start Tax: " + this.startTax);
-				break;
-			}
-		}*/
-		//this.finalTax = Double.MIN_VALUE;
 		for(int i=0;i<transactionList.size();i++){
-
 			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
 				g.printGraph((Transaction) transactionList.get(i));
 			}
-			
 
 			if (i==transactionList.size()-1){
+				/*
+				 * Test the final transaction idea
+				 */
+				boolean finalTrans = false;
+				Transaction finalTransaction = graph.getFinalTransaction();
+				if (finalTransaction != null) {
+					if (t.doTransfer(finalTransaction)) {
+						g.printGraph(finalTransaction);
+						finalTrans = true;
+					}
+				}
+				
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){
 						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
@@ -155,6 +203,8 @@ public class TaxFitness extends FitnessFunction {
 						break;
 					}
 				}
+				if (!finalTrans)
+					this.finalTax = Double.MAX_VALUE;
 			}
 		}
 		
@@ -163,6 +213,11 @@ public class TaxFitness extends FitnessFunction {
 		if (this.verbose)
 			System.out.println("FITNESS: " + ind.getFitness());
 	}
+	
+	
+	
+	
+	
 	public Boolean isMaximizingFunction() {
 		return true;
 	}

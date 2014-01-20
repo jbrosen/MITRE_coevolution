@@ -42,7 +42,7 @@ public class TaxPayer implements Entity{
 		return Portfolio;
 	}
 	public double getTotalTax() {
-		return totalTax;
+		return this.totalTax;
 	}
 	public double getStartTax() {
 		return startTax;
@@ -53,7 +53,9 @@ public class TaxPayer implements Entity{
 	}
 
 	public void calculuateStartTax(){
-	
+//		test, tax starts at 80
+		this.startTax=80;
+		this.setTotalTax(this.startTax);
 	}
 	
 	@Override

@@ -13,15 +13,27 @@ import interpreter.entities.TaxPayer;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import evogpj.algorithm.Parameters;
 public class Graph {
 	public ArrayList<Transaction> transactionList;
 	public static ArrayList<Entity> nodesList; 
-	private boolean verbose = false;
+	private boolean verbose = Parameters.Defaults.VERBOSE;
 	
+	
+	
+	/*
+	 * Test
+	 */
+	private double annThresh = 0;
+	public double getAnnThresh() {
+		return this.annThresh;
+	}
+	public void setAnnThresh(double a) {
+		this.annThresh=a;
+	}
 	
 	public Graph(){
-	
-	
 	
 		//Entities
 		TaxPayer Jones = new TaxPayer("Jones");
@@ -29,7 +41,7 @@ public class Graph {
 		Partnership JonesCo = new Partnership("JonesCo");
 		Partnership FamilyTrust = new Partnership("FamilyTrust");
 		TaxPayer Brown = new TaxPayer("Brown");
-
+		
 		
 		//Assets
 //		JonesCo owns a 99% Partnership of NewCo
@@ -52,8 +64,6 @@ public class Graph {
 		Cash cash3 = new Cash(200);
 		cash3.setInsideBasis(200);
 		cash3.getOwners().put("Brown", 200.0);
-		
-		
 		
 		//Add Assets
 		Jones.getPortfolio().add(P2);
@@ -88,7 +98,9 @@ public class Graph {
 		
 		//set taxable taxpayer
 		Jones.setCanBeTaxed(true);
+//		Set beginning tax to be $80 
 		Jones.setTotalTax(Double.MIN_VALUE);
+//		Jones.setTotalTax(80);
 		
 		this.nodesList.add(Jones);
 		this.nodesList.add(NewCo);
@@ -96,149 +108,53 @@ public class Graph {
 		this.nodesList.add(FamilyTrust);
 		this.nodesList.add(Brown);
 		
-	/*
-		
-				//Entities
-				TaxPayer A = new TaxPayer("A");
-				TaxPayer B = new TaxPayer("B");
-				TaxPayer C = new TaxPayer("C");
-				TaxPayer D = new TaxPayer("D");
-				TaxPayer E = new TaxPayer("E");
-
-
-				Partnership P1 = new Partnership("P1");
-				Partnership P2 = new Partnership("P2");
-				Partnership P3 = new Partnership("P3");
-
-		
-
-				
-				//Assets 
-				PartnershipAsset PA1 = new PartnershipAsset(30,"P1");
-				PA1.getOwners().put("A", 30.0);
-				
-				PartnershipAsset PA2 = new PartnershipAsset(20,"P1");
-				PA2.getOwners().put("B", 20.0);
-
-				PartnershipAsset PA3 = new PartnershipAsset(50,"P1");
-				PA3.getOwners().put("D", 50.0);
-				
-				PartnershipAsset PA4 = new PartnershipAsset(50,"P2");
-				PA4.getOwners().put("P1", 50.0);
-				
-
-				
-				Material HouseB = new Material(300,"HouseB",1);
-				HouseB.setInsideBasis(100);
-				HouseB.getOwners().put("B", 200.0);
-				
-				Material HouseAB = new Material(400,"HouseAB",1);
-				HouseAB.setInsideBasis(300);
-				HouseAB.getOwners().put("A", 250.0);
-				HouseAB.getOwners().put("B", 50.0);
-
-				
-				Material HouseP2 = new Material(300,"HouseP2",1);
-				HouseP2.setInsideBasis(100);
-				HouseP2.getOwners().put("P1", 200.0);
-				
-				
-				Cash cashA = new Cash(300);
-				cashA.setInsideBasis(300);
-				cashA.getOwners().put("A", 300.0);
-				
-				Cash cashC = new Cash(600);
-				cashC.setInsideBasis(600);
-				cashC.getOwners().put("C", 600.0);
-				
-				
-				
-				Material HouseE = new Material(500,"HouseE",1);
-				HouseE.setInsideBasis(100);
-				HouseE.getOwners().put("E", 200.0);
-				
-				Material HouseA = new Material(300,"HouseA",1);
-				HouseA.setInsideBasis(100);
-				HouseA.getOwners().put("A", 200.0);
-				
-				Cash cashB = new Cash(300);
-				cashB.setInsideBasis(300);
-				cashB.getOwners().put("B", 300.0);
-				
-				Cash cashD = new Cash(500);
-				cashD.setInsideBasis(500);
-				cashD.getOwners().put("D", 500.0);
-				
-				
-				
-				
-				//Add Assets
-				A.getPortfolio().add(PA1);
-				A.getPortfolio().add(HouseA);
-				B.getPortfolio().add(PA2);
-				C.getPortfolio().add(cashC);
-				D.getPortfolio().add(PA3);
-				P1.getPortfolio().add(HouseAB);
-				P1.getPortfolio().add(HouseB);
-				P1.getPortfolio().add(cashA);
-				P1.getPortfolio().add(PA4);
-				P2.getPortfolio().add(HouseP2);
-				P1.getPortfolio().add(cashB);
-				E.getPortfolio().add(HouseE);
-				D.getPortfolio().add(cashD);
-
-
-
-				
-				
-				this.transactionList = new ArrayList<Transaction>();
-				this.nodesList = new ArrayList<Entity>();
-				
-				//add children
-				A.getPartnershipIn().add(P1);
-				B.getPartnershipIn().add(P1);
-				P1.getPartnershipIn().add(P2);
-				D.getPartnershipIn().add(P1);
-
-				
-				
-			
-				//add parents
-				P1.getPartners().add(A);
-				P1.getPartners().add(B);
-				P1.getPartners().add(D);
-				P2.getPartners().add(P1);
-
-
-				
-				
-				//add parentData
-				PartnerData pd1 = new PartnerData(30,"A");
-				P1.getPartnerData().add(pd1);
-				
-				PartnerData pd2 = new PartnerData(20,"B");
-				P1.getPartnerData().add(pd2);
-				
-				PartnerData pd3 = new PartnerData(50,"D");
-				P1.getPartnerData().add(pd3);
-				
-				PartnerData pd4 = new PartnerData(50,"P1");
-				P2.getPartnerData().add(pd4);
-				
-				
-				this.nodesList.add(A);
-				this.nodesList.add(B);
-				this.nodesList.add(C);
-				this.nodesList.add(D);
-				this.nodesList.add(P1);
-				this.nodesList.add(P2);
-				this.nodesList.add(E);
-				this.nodesList.add(P3);
-				
-		*/
-		
-		
 	}
+	
+	/*
+	 * Finds whoever owns the hotel and generates a transaction object that sells
+	 * the hotel to Brown
+	 */
+	public Transaction getFinalTransaction() {
+		Transaction finalTransaction = null;
+		
+		ArrayList<Entity> nodesList = getNodes();
+		Entity seller = null;
+		outerloop:
+		for (Entity e : nodesList) {
+			for (Assets a : e.getPortfolio()) {
+				if (a.toString() == "Material") {
+					if (((Material)a).getName().equals("Hotel")) {
+						seller = e;
+						break outerloop;
+					}
+				}
+			}
+		}
+		
+		if (seller != null) {
+			Material m1 = new Material(200,"Hotel",1);
+			Cash c1 = new Cash(200);
+			
+			Actions a21 = new Actions(seller.getName(),"Brown",m1);
+			Actions a22 = new Actions("Brown",seller.getName(),c1);
+			finalTransaction = new Transaction(a21,a22);
+		}
+		
+		/*
+		 * Test to see what happens if we require that the hotel be sold by NewCo in the end
+		 */
+		Material m2 = new Material(200,"Hotel",1);
+		Cash c2 = new Cash(200);
+		Actions a1 = new Actions("NewCo","Brown",m2);
+		Actions a2 = new Actions("Brown","NewCo",c2);
+		finalTransaction = new Transaction(a1,a2);
+		
+		return finalTransaction;
+	}
+	
+	
+	
+	
 	public void setTransactions(ArrayList<Transaction> trans) {
 		this.transactionList = (ArrayList<Transaction>)trans.clone();
 	}
@@ -249,6 +165,15 @@ public class Graph {
 		return (ArrayList<Entity>) this.nodesList;
 	}
 	
+	public int getNumPartnerships() {
+		int ret = 0;
+		for (Entity e : getNodes()) {
+			if (e.getType() == "Partnership")
+				ret += 1;
+		}
+		return ret;
+	}
+	
 	/*
 	 * takes in a String of actions generated by the parser
 	 * and converts them into Transaction objects.
@@ -256,7 +181,7 @@ public class Graph {
 	 */
 	public void createAction(ArrayList<String> transactions){
 		//System.out.println("INSIDE INTERPRETER GRAPH: PERFORMING ACTIONS BETWEEN ENTITIES TO CALCULATE TAX");
-
+		
 		for(int i=0;i<transactions.size();i++){
 			String t1 = transactions.get(i);
 			//System.out.println("transactions: "+ t1);

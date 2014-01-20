@@ -89,6 +89,7 @@ public class PartnershipAsset extends Assets{
 		double CFMV=0;
 		ArrayList<Entity> nodes = Graph.nodesList;
 		Entity child = null;
+//		find the Partnership that this asset represents in the graph
 		for(Entity e: nodes){
 			if(this.getName().equals(e.getName())){
 				//System.out.println("CHILD FOUND:"+e.getName());
@@ -96,22 +97,28 @@ public class PartnershipAsset extends Assets{
 				break;
 			}
 		}
+//		for all entities that own a share in the PartnershipAsset
 		for(String ownerName:this.getOwners().keySet()){
 			//System.out.println("OWNER NAME:" + ownerName);
-
+//			and for all assets that the Partnership owns
 			for(Assets asset: child.getPortfolio()){
 				//System.out.println("asset found:"+ asset.toString());
-	
+				
+//				if the asset owned by the Partnership is also owned by an entity with a share in the partnership
 				if(asset.getOwners().containsKey(ownerName) ){
+//					Add the CFMV of the asset to this asset
 					CFMV += asset.getCurrentFMV();
 					//System.out.println("VALUE OF CFMV:" + CFMV);
 				}
+//				otherwise, if the asset that this Partnership owns is also a PartnershipAsset 
 				else if(asset.toString().equals("PartnershipAsset")){
+//					Add the share percentage that this PartnershipAsset represents of the asset to the list
+//					I think the problem arises when the asset tries to call itself.
+//					Should I put a clause in that passes it up? Or is it illegal to begin with?
 					CFMV += asset.getCurrentFMV() * (this.getShare()/100);
 				}
 			}
 		}
-
 		return CFMV;
 	}
 	
@@ -145,7 +152,6 @@ public class PartnershipAsset extends Assets{
 
 			((Partnership) from).pushTaxToPartners();
 		}
-	
 	}
 
 	@Override

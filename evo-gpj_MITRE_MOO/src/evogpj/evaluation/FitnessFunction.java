@@ -39,7 +39,7 @@ public abstract class FitnessFunction {
 	// used by non-dominated sort to convert all fitness functions
 	// to minimizers
 	// public Boolean isMaximizingFunction;
-
+	
 	/**
 	 * Evaluate a single individual
 	 * 

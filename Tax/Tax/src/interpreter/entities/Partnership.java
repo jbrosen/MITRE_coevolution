@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import evogpj.algorithm.Parameters;
+
 /*
  * Each node stores info about parent nodes and child nodes.
  * Parent nodes are partners who have partnership in this node.
@@ -22,7 +24,7 @@ public class Partnership implements Entity{
 	private final ArrayList<PartnerData> partnerData = new ArrayList<PartnerData>();
     private Assets assetToBeTransferred;
 	public Assets assetClone;
-	private boolean verbose = false;
+	private boolean verbose = Parameters.Defaults.VERBOSE;
 
 
 	private String name;

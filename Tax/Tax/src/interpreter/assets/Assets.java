@@ -6,6 +6,8 @@ import interpreter.entities.Entity;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import evogpj.algorithm.Parameters;
+
 /*
  * Abstract class that defines properties of Assets
  * 
@@ -19,7 +21,7 @@ public abstract class Assets {
 	protected double currentFMV;
 	protected HashMap<String,Double> insideBasisMap = new HashMap<String,Double>();
 	protected HashMap<String,Double> owners = new HashMap<String,Double>();
-	protected boolean verbose = false;
+	protected boolean verbose = Parameters.Defaults.VERBOSE;
 
 	public abstract void calculateTax(Entity from);
 	//public abstract double getAssetValue();

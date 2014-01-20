@@ -3,16 +3,19 @@ package tests;
 import static org.junit.Assert.*;
 
 import evogpj.evaluation.TaxCodeFitness;
+import evogpj.evaluation.TaxFitness;
 import evogpj.genotype.ListGenotype;
 import evogpj.gp.Individual;
 
 import interpreter.PrintGraph;
 import interpreter.assets.Annuity;
+import interpreter.assets.Assets;
 import interpreter.assets.Cash;
 import interpreter.assets.Material;
 import interpreter.assets.PartnershipAsset;
 import interpreter.assets.Share;
 import interpreter.entities.Entity;
+import interpreter.entities.TaxPayer;
 import interpreter.misc.Actions;
 import interpreter.misc.Graph;
 import interpreter.misc.Transaction;
@@ -351,7 +354,9 @@ public class testCases {
 		}
 	}
 	
-	@Test
+
+	
+//	@Test
 	public void fitnessTest() {
 		writeFile wf = new writeFile("C:\\Users\\Jacob\\Documents\\MIT\\SCOTE\\code\\Tax\\Tax\\src\\interpreter\\output.txt");
 		ArrayList<Integer> alist = new ArrayList<Integer>();
@@ -362,36 +367,140 @@ public class testCases {
 		tcf.eval(ind1);
 	}
 	
+	/*
+	 * This should generate zero tax based on the initial GA
+	 * Transaction(FamilyTrust,NewCo,Annuity(100,30),Annuity(100,30))Transaction(Jones,JonesCo,PartnershipAsset(99,FamilyTrust),Annuity(300,30))
+	 */
 //	@Test
-	public void ibob() {
+	public void noTaxTest() {
 		TaxCode tc = new TaxCode();
 		tc.setAnnuityThreshold(0);
 		t.setTaxCode(tc);
 		
-//		JonesCo gives p1 to FamilyTrust in exchange for a1
-		PartnershipAsset p1 = new PartnershipAsset(99,"NewCo");
-		Annuity a1 = new Annuity(200,30);
-
 		
-		Actions a11 = new Actions("JonesCo","FamilyTrust",p1);
-		Actions a12 = new Actions("FamilyTrust", "JonesCo",a1);
-		Transaction t1 = new Transaction(a11,a12);
+		ArrayList<Entity> nodes = graph.getNodes();
+		for (Entity e : nodesList) {
+			if (e.getName()=="Jones")
+				System.out.println(e.getTotalTax());
+		}
+		
+	}
+	
+	/*
+	 * This creates a three-way cycle that causes a stackoverflow error
+	 */
+//	@Test
+	public void cycleTest() {
+		
+		TaxCode tc = new TaxCode();
+		tc.setAnnuityThreshold(0);
+		t.setTaxCode(tc);
+		
+//		FamilyTrust gets Partnership in JonesCo from Jones for Annuity
+		PartnershipAsset p1 = new PartnershipAsset(99,"JonesCo");
+		Annuity a1 = new Annuity(200,30);
+		
+		Actions A11 = new Actions("FamilyTrust","Jones",a1);
+		Actions A12 = new Actions("Jones","FamilyTrust",p1);
+		Transaction t1 = new Transaction(A11,A12);
+		if (t.doTransfer(t1))
+			g.printGraph(t1);
+		else
+			System.out.println("1: ILLEGAL");
+		
+		
+//		Jones sells PShip in FT to NewCo
+		PartnershipAsset p2 = new PartnershipAsset(99,"FamilyTrust");
+		Annuity a2 = new Annuity(198,30);
+		Actions A21 = new Actions("NewCo","Jones",a2);
+		Actions A22 = new Actions("Jones","NewCo",p2);
+		Transaction t2 = new Transaction(A21,A22);
+		if (t.doTransfer(t2))
+			g.printGraph(t2);
+		else
+			System.out.println("2: ILLEGAL");
+	}
+	
+//	@Test
+	public void testFitnesses() {
+		TaxFitness tf = new TaxFitness(graph);
+		TaxCodeFitness tcf = new TaxCodeFitness(graph);
+		
+		ArrayList<String> transactions = new ArrayList<String>();
+		transactions.add("Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))");
+//		transactions.add("Transaction(Brown,NewCo,Cash(200),Material(200,Hotel,1))");
+		System.out.println("ANSWER #1: "+tf.getFitnessOfIndividual(transactions, 50));
+		
+		System.out.println("ANSWER #2: "+tcf.getFitnessOfIndividual(50, transactions));
+	}
+	
+	
+	@Test
+	public void ibob() {
+		TaxCode tc = new TaxCode();
+		tc.setAnnuityThreshold(0);
+		t.setTaxCode(tc);
+		ArrayList<String> ret = new ArrayList<String>();
+		ret.add("Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))");
+		ret.add("Transaction(Jones,FamilyTrust,PartnershipAsset(99,JonesCo),Cash(300))");
+		graph.createAction(ret);
+		ArrayList<Transaction> trans = graph.getTransactions();
+		for (Transaction r : trans) {
+			if (t.doTransfer(r)) {
+				g.printGraph(r);
+			}
+		}
+		
+		/*
+		 * Phenotypes that generate Double.MIN_VALUE or 0.0 tax that are NOT iBob
+		 * Transaction(NewCo,Brown,Material(200,Hotel,1),Annuity(300,30)) - Double.MIN_VALUE
+		 * Problem with this one is that the point of exhanging an annuity is that when its between two entities that a 
+		 * taxpayer owns, they dont care whether or not the money ever actually makes it there
+		 * Transaction(Jones,Brown,PartnershipAsset(99,JonesCo),Annuity(300,30)) - Double.MIN_VALUE
+		 * Transaction(Jones,JonesCo,Annuity(200,30),PartnershipAsset(99,NewCo)) - 0, should be illegal/infeasible
+		 * NOTE in the PartnershipAsset block of the Transfer class, you only look through the getPartners function for a link,
+		 * not the getPartnershipIn field. This becomes illegal when you use that field as well
+		 * Transaction(FamilyTrust,NewCo,Annuity(300,30),Material(200,Hotel,1)) - 0
+		 * Would this be more suspicious?
+		 * The second transaction here is illegal but it doesn't matter
+		 * Transaction(JonesCo,Brown,PartnershipAsset(99,NewCo),Annuity(200,30)) - Double.MIN_VALUE
+		 * Again, can be solved by needing to trust that the annuity will be repaid. How do you code this in?
+		 * Transaction(Jones,NewCo,PartnershipAsset(99,NewCo),Material(200,Hotel,1))Transaction(Brown,JonesCo,PartnershipAsset(99,JonesCo),Annuity(200,30))
+		 * Transaction(Jones,Jones,Material(200,Hotel,1),Cash(300))Transaction(NewCo,FamilyTrust,Cash(100),PartnershipAsset(99,FamilyTrust))
+		 * Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))Transaction(Brown,Jones,Material(200,Hotel,1),Material(200,Hotel,1))
+		 * Transaction(FamilyTrust,Brown,Material(200,Hotel,1),Cash(100))Transaction(Jones,FamilyTrust,Annuity(100,30),Cash(300))
+		 * FOUND IBOB!!
+		 * Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))Transaction(Jones,FamilyTrust,PartnershipAsset(99,JonesCo),Cash(300))
+		 * FOUND IBOB AGAIN!!
+		 */
+		
+		Transaction finTran = graph.getFinalTransaction();
+		if (t.doTransfer(finTran))
+			g.printGraph(finTran);
 		
 //		NewCo sells m1 to Brown for c1
-		Material m1 = new Material(200,"Hotel",1);
-		Cash c1 = new Cash(200);
+//		Material m1 = new Material(200,"Hotel",1);
+//		Cash c1 = new Cash(200);
+//		
+//		Actions a21 = new Actions("NewCo","Brown",m1);
+//		Actions a22 = new Actions("Brown","NewCo",c1);
+//		Transaction t2 = new Transaction(a21,a22);
+//		
+//		if (t.doTransfer(t2)) {
+//			g.printGraph(t2);
+//		}
 		
-		Actions a21 = new Actions("NewCo","Brown",m1);
-		Actions a22 = new Actions("Brown","NewCo",c1);
-		Transaction t2 = new Transaction(a21,a22);
-		
-		if (t.doTransfer(t1)) {
-			g.printGraph(t1);
+		for (Entity e : nodesList) {
+			if (e.getName()=="Jones") {
+				System.out.println(e.getTotalTax());
+//				System.out.println("PARTNERS");
+//				for (Entity ee : e.getPartners())
+//					System.out.print(ee.getName()+", ");
+//				System.out.println("CHILDREN");
+//				for (Entity ee : e.getPartnershipIn())
+//					System.out.print(ee.getName()+", ");
+			}
 		}
-		if (t.doTransfer(t2)) {
-			g.printGraph(t2);
-		}
-		
 	}
 	
 	

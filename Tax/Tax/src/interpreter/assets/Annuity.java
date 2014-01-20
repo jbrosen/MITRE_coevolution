@@ -55,9 +55,7 @@ public class Annuity extends Assets{
 		Iterator<Assets> fromItr = fromPortfolio.iterator();
 		Iterator<Assets> toItr = toPortfolio.iterator();
 		
-			
-		
-			toPortfolio.add(this);
+		toPortfolio.add(this);
 	
 		
 	}

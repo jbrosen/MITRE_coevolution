@@ -7,6 +7,7 @@ import evogpj.Parser.Parser;
 
 import evogpj.phenotype.ListPhenotype;
 
+import evogpj.algorithm.Parameters;
 import evogpj.genotype.ListGenotype;
 import evogpj.gp.GPException;
 import evogpj.gp.Individual;
@@ -14,7 +15,7 @@ import evogpj.gp.MersenneTwisterFast;
 import evogpj.gp.Population;
 
 public class ListSinglePointCrossover extends RandomOperator implements Crossover{
-	private boolean verbose = false;
+	private boolean verbose = Parameters.Defaults.VERBOSE;
 	public ListSinglePointCrossover(MersenneTwisterFast rand2) {
 		super(rand2);
 	}
