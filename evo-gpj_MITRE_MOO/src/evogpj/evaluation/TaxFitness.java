@@ -27,7 +27,12 @@ public class TaxFitness extends FitnessFunction {
 	public TaxFitness(Graph graph) {
 		this.finalTax = 0;
 	}
+	
+	/*
+	 * METHODS FOR UNIDIRECTIONAL GA
+	 */
 
+//	evaluates and sets the fitness of each individual in pop
 	@Override
 	public void evalPop(Population pop) {
 		for (Individual individual : pop) {
@@ -35,129 +40,13 @@ public class TaxFitness extends FitnessFunction {
 		}
 	}
 	
-	public void eval(Individual ind, Population pop) {
-		double totFitness = 0.0;
-		Parser p = new Parser();
-		for (Individual i : pop) {
-			try{
-				double annThresh = p.getAnnuityThreshold(i.getGenotype().getGenotype());
-				TaxCode tc = new TaxCode();
-				tc.setAnnuityThreshold(annThresh);
-				totFitness += getFitnessOfIndividual(ind, tc);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		ind.setFitness(totFitness);
-	}
-	
-	/*
-	 * Given an individual and a tax code, returns the fitness of the individual when compared to that tax code
-	 */
-	public double getFitnessOfIndividual(Individual ind, TaxCode tc ) {
-		ArrayList<String> transactions = new ArrayList<String>();
-		Parser p = new Parser();
-		try {
-			transactions = p.getAction(ind.getGenotype().getGenotype());
-			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
-//			System.out.println(p.getPhenotype());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		Graph graph = new Graph();
-		ArrayList<Entity> nodesList = graph.getNodes();
-		graph.createAction(transactions);
-		ArrayList<Transaction> transactionList = graph.getTransactions();
-		
-		Transfer t = new Transfer(nodesList, tc);
-		PrintGraph g = new PrintGraph(nodesList);
-		
-		
-		for(int i=0;i<transactionList.size();i++){
-//			HOW TO ADDRESS ILLEGAL TRANSACTIONS
-			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
-				g.printGraph((Transaction) transactionList.get(i));
-			}
-			
-			if (i==transactionList.size()-1){
-				boolean finalTrans = false;
-				Transaction finalTransaction = graph.getFinalTransaction();
-				if (finalTransaction != null) {
-					if (t.doTransfer(finalTransaction)) {
-						g.printGraph(finalTransaction);
-						finalTrans = true;
-					}
-				}
-				
-				
-				for(int j=0;j<nodesList.size();j++){
-					if(nodesList.get(j).getType().equals("TaxPayer")){
-						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
-							this.finalTax = nodesList.get(j).getTotalTax();
-						}
-						break;
-					}
-				}
-				if (!finalTrans)
-					this.finalTax = Double.MAX_VALUE;
-			}
-		}
-		return -finalTax;
-	}
-	
-//	test using ArrayList of transaction strings and anniuty threshold
-	public double getFitnessOfIndividual(ArrayList<String> transactions, double annuityThreshold) {
-
-		
-		Graph graph = new Graph();
-		ArrayList<Entity> nodesList = graph.getNodes();
-		graph.createAction(transactions);
-		ArrayList<Transaction> transactionList = graph.getTransactions();
-		TaxCode tc = new TaxCode();
-		tc.setAnnuityThreshold(annuityThreshold);
-		
-		
-		Transfer t = new Transfer(nodesList, tc);
-		PrintGraph g = new PrintGraph(nodesList);
-		
-		
-		for(int i=0;i<transactionList.size();i++){
-//			HOW TO ADDRESS ILLEGAL TRANSACTIONS
-			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
-				g.printGraph((Transaction) transactionList.get(i));
-			}
-			
-			if (i==transactionList.size()-1){
-				boolean finalTrans = false;
-				Transaction finalTransaction = graph.getFinalTransaction();
-				if (finalTransaction != null) {
-					if (t.doTransfer(finalTransaction)) {
-						g.printGraph(finalTransaction);
-						finalTrans = true;
-					}
-				}
-				
-				
-				for(int j=0;j<nodesList.size();j++){
-					if(nodesList.get(j).getType().equals("TaxPayer")){
-						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
-							this.finalTax = nodesList.get(j).getTotalTax()+annuityThreshold;
-						}
-						break;
-					}
-				}
-				if (!finalTrans)
-					this.finalTax = Double.MAX_VALUE;
-			}
-		}
-		return -finalTax;
-	}
-	
+//	evaluates and sets the fitness of individual ind
 	public void eval(Individual ind) {
 		if (this.verbose)
 			System.out.println("INSIDE TAX FITNESS\n");
 		ArrayList<String> transactions = new ArrayList<String>();
+//		use a Parser instance to convert the genotype (list of integers) into a phenotype
+//		(string representation of a transaction list)
 		Parser p = new Parser();
 		try {
 			
@@ -166,35 +55,33 @@ public class TaxFitness extends FitnessFunction {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+//		set up the Graph and Transfer class, and convert string representation of
+//		transaction list into an ArrayList of Transaction objects
 		Graph graph = new Graph();
 		ArrayList<Entity> nodesList = graph.getNodes();
 		graph.createAction(transactions);
-		
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
 		Transfer t = new Transfer(nodesList, new TaxCode());
-		
 		PrintGraph g = new PrintGraph(nodesList);
 		
+//		execute each transaction
 		for(int i=0;i<transactionList.size();i++){
 			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
 				g.printGraph((Transaction) transactionList.get(i));
 			}
-
+			
+//			when all of the transactions in the list of been completed
 			if (i==transactionList.size()-1){
-				/*
-				 * Test the final transaction idea
-				 */
-				boolean finalTrans = false;
+//				find who owns the hotel and have them sell it to Brown
+//				see Graph.getFinalTransaction for details
 				Transaction finalTransaction = graph.getFinalTransaction();
 				if (finalTransaction != null) {
 					if (t.doTransfer(finalTransaction)) {
 						g.printGraph(finalTransaction);
-						finalTrans = true;
 					}
 				}
-				
+//				get the final tax of the primary taxpayer
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){
 						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
@@ -203,8 +90,6 @@ public class TaxFitness extends FitnessFunction {
 						break;
 					}
 				}
-				if (!finalTrans)
-					this.finalTax = Double.MAX_VALUE;
 			}
 		}
 		
@@ -214,8 +99,141 @@ public class TaxFitness extends FitnessFunction {
 			System.out.println("FITNESS: " + ind.getFitness());
 	}
 	
+	/*
+	 * CO-EVOLUTIONARY GA METHODS
+	 */
 	
+//	evaulates and sets the fitness of ind against each member of the Population pop
+	public void eval(Individual ind, Population pop) {
+		double totFitness = 0.0;
+		int numLegal = 0;
+//		use the Parser to convert the Genotype of each member of pop into a Tax Code object
+		for (Individual i : pop) {
+			Parser p = new Parser();
+			try{
+				double annThresh = p.getAnnuityThreshold(i.getGenotype().getGenotype());
+				TaxCode tc = new TaxCode();
+				tc.setAnnuityThreshold(annThresh);
+				double fit = getFitnessOfIndividual(ind, tc);
+//				make sure the interaction did not result in all impossible/infeasible transactions
+				if (fit < Double.MAX_VALUE) {
+					totFitness += fit;
+					numLegal += 1;
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+//		the final fitness is the mean of all transactions with at least one legal transaction
+		if (numLegal > 0) {
+			ind.setFitness(totFitness/numLegal);
+		}
+		else {
+			ind.setFitness(-100.0);
+		}
+	}
 	
+//	Given an individual and a tax code, returns the fitness of the individual when compared to that tax code
+	public double getFitnessOfIndividual(Individual ind, TaxCode tc ) {
+		ArrayList<String> transactions = new ArrayList<String>();
+//		use a Parser instance to convert the genotype (list of integers) into a phenotype
+		Parser p = new Parser();
+		try {
+			transactions = p.getAction(ind.getGenotype().getGenotype());
+			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+//		set up the Graph and Transfer class, and convert string representation of
+//		transaction list into an ArrayList of Transaction objects
+		Graph graph = new Graph();
+		ArrayList<Entity> nodesList = graph.getNodes();
+		graph.createAction(transactions);
+		ArrayList<Transaction> transactionList = graph.getTransactions();
+		
+		Transfer t = new Transfer(nodesList, tc);
+		PrintGraph g = new PrintGraph(nodesList);
+		
+//		execute each transaction
+		for(int i=0;i<transactionList.size();i++){
+//			HOW TO ADDRESS ILLEGAL TRANSACTIONS
+			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
+				g.printGraph((Transaction) transactionList.get(i));
+			}
+			
+//			when all of the transactions in the list of been completed
+			if (i==transactionList.size()-1){
+//				find who owns the hotel and have them sell it to Brown
+//				see Graph.getFinalTransaction for details
+				Transaction finalTransaction = graph.getFinalTransaction();
+				if (finalTransaction != null) {
+					if (t.doTransfer(finalTransaction)) {
+						g.printGraph(finalTransaction);
+					}
+				}
+				
+//				get the final tax of the primary taxpayer
+				for(int j=0;j<nodesList.size();j++){
+					if(nodesList.get(j).getType().equals("TaxPayer")){
+						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
+							this.finalTax = nodesList.get(j).getTotalTax();
+						}
+						break;
+					}
+				}
+			}
+		}
+		return -finalTax;
+	}
+	
+//	test using ArrayList of transaction strings and anniuty threshold
+	public double getFitnessOfIndividual(ArrayList<String> transactions, double annuityThreshold) {
+		
+//		set up the Graph and Transfer class, and convert string representation of
+//		transaction list into an ArrayList of Transaction objects
+		Graph graph = new Graph();
+		ArrayList<Entity> nodesList = graph.getNodes();
+		graph.createAction(transactions);
+		ArrayList<Transaction> transactionList = graph.getTransactions();
+		
+		TaxCode tc = new TaxCode();
+		tc.setAnnuityThreshold(annuityThreshold);
+		
+		Transfer t = new Transfer(nodesList, tc);
+		PrintGraph g = new PrintGraph(nodesList);
+		
+//		execute each transaction
+		for(int i=0;i<transactionList.size();i++){
+//			HOW TO ADDRESS ILLEGAL TRANSACTIONS
+			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
+				g.printGraph((Transaction) transactionList.get(i));
+			}
+			
+//			when all of the transactions in the list of been completed
+			if (i==transactionList.size()-1){
+//				find who owns the hotel and have them sell it to Brown
+//				see Graph.getFinalTransaction for details
+				Transaction finalTransaction = graph.getFinalTransaction();
+				if (finalTransaction != null) {
+					if (t.doTransfer(finalTransaction)) {
+						g.printGraph(finalTransaction);
+					}
+				}
+				
+//				get the final tax of the primary taxpayer
+				for(int j=0;j<nodesList.size();j++){
+					if(nodesList.get(j).getType().equals("TaxPayer")){
+						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
+							this.finalTax = nodesList.get(j).getTotalTax();
+						}
+						break;
+					}
+				}
+			}
+		}
+		return -finalTax;
+	}
 	
 	
 	public Boolean isMaximizingFunction() {

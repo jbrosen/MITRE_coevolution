@@ -29,8 +29,6 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import calculator.Calculator;
-//import java.lang.System;
 
 
 public class testCases {
@@ -40,7 +38,6 @@ public class testCases {
 	
 	ArrayList<Entity> nodesList = graph.getNodes();
 	Transfer t = new Transfer(nodesList, taxCode);
-	Calculator c = new Calculator(nodesList);
 	PrintGraph g = new PrintGraph(nodesList);
 	
 	
@@ -441,8 +438,9 @@ public class testCases {
 		tc.setAnnuityThreshold(0);
 		t.setTaxCode(tc);
 		ArrayList<String> ret = new ArrayList<String>();
-		ret.add("Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))");
-		ret.add("Transaction(Jones,FamilyTrust,PartnershipAsset(99,JonesCo),Cash(300))");
+//		Transaction(FamilyTrust,JonesCo,Annuity(300,30),PartnershipAsset(99,NewCo))Transaction(Brown,NewCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))
+		ret.add("Transaction(FamilyTrust,JonesCo,Annuity(300,30),PartnershipAsset(99,NewCo))");
+		ret.add("Transaction(Brown,NewCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))");
 		graph.createAction(ret);
 		ArrayList<Transaction> trans = graph.getTransactions();
 		for (Transaction r : trans) {
@@ -472,23 +470,15 @@ public class testCases {
 		 * FOUND IBOB!!
 		 * Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))Transaction(Jones,FamilyTrust,PartnershipAsset(99,JonesCo),Cash(300))
 		 * FOUND IBOB AGAIN!!
+		 * Transaction(FamilyTrust,NewCo,Annuity(200,30),Material(200,Hotel,1))
+		 * 
 		 */
 		
 		Transaction finTran = graph.getFinalTransaction();
 		if (t.doTransfer(finTran))
 			g.printGraph(finTran);
 		
-//		NewCo sells m1 to Brown for c1
-//		Material m1 = new Material(200,"Hotel",1);
-//		Cash c1 = new Cash(200);
-//		
-//		Actions a21 = new Actions("NewCo","Brown",m1);
-//		Actions a22 = new Actions("Brown","NewCo",c1);
-//		Transaction t2 = new Transaction(a21,a22);
-//		
-//		if (t.doTransfer(t2)) {
-//			g.printGraph(t2);
-//		}
+
 		
 		for (Entity e : nodesList) {
 			if (e.getName()=="Jones") {
@@ -503,65 +493,43 @@ public class testCases {
 		}
 	}
 	
+//	@Test
+	public void realiBOB() {
+		Annuity a1 = new Annuity(200,30);
+		PartnershipAsset p1 = new PartnershipAsset(99,"NewCo");
+		Actions a11 = new Actions("FamilyTrust","JonesCo",a1);
+		Actions a12 = new Actions("JonesCo","FamilyTrust",p1);
+		Transaction t1 = new Transaction(a11,a12);
+		if (t.doTransfer(t1))
+			g.printGraph(t1);
+		
+		Material m1 = new Material(200,"Hotel",1);
+		Cash c1 = new Cash(200);
+		
+		Actions a21 = new Actions("NewCo","Brown",m1);
+		Actions a22 = new Actions("Brown","NewCo",c1);
+		Transaction t2 = new Transaction(a21,a22);
+		
+		if (t.doTransfer(t2)) {
+			g.printGraph(t2);
+		}
+	}
 	
-	//test case with IBOB graph
 //	@Test
 	public void test19() {
-		
 		TaxCode tc = new TaxCode();
 		tc.setAnnuityThreshold(0);
 		t.setTaxCode(tc);
 		
-		Annuity a  = new Annuity(200,30);
-		PartnershipAsset pa = new PartnershipAsset(30,"NewCo");
-
-		Material hotel = new Material(200,"Hotel",1);
-		Cash c = new Cash(200);
+		Annuity a = new Annuity(200,30);
+		PartnershipAsset p1 = new PartnershipAsset(99,"NewCo");
 		
-		
-		Actions a1 = new Actions("FamilyTrust","JonesCo",a);
-		Actions a2 = new Actions("JonesCo","FamilyTrust",pa);
-		Actions a3 = new Actions("NewCo","Brown",hotel);
-		Actions a4 = new Actions("Brown","NewCo",c);
-
-		
-		
-		
+		Actions a1 = new Actions("NewCo","JonesCo",a);
+		Actions a2 = new Actions("JonesCo","NewCo",p1);
 		Transaction t1 = new Transaction(a1,a2);
-		Transaction t2 = new Transaction(a3,a4);
-
-		if(t.doTransfer(t1)){
+		
+		if (t.doTransfer(t1))
 			g.printGraph(t1);
-		}
-		if(t.doTransfer(t2)){
-			g.printGraph(t2);
-		}
-		
-//		String guiFile="C:\\Users\\Jacob\\Documents\\NichWorkspace\\NichWork\\ALFANetworkGUI.py";
-//		String outputFile="C:\\Users\\Jacob\\Documents\\MIT\\SCOTE\\output1.txt";
-//		
-//		String[] command = new String[3];
-//		command[0]="python";
-//		command[1]=guiFile;
-//		command[2]=outputFile;
-//
-//		
-//		try{
-//			Process process = Runtime.getRuntime().exec(command);
-//			process.waitFor();
-//			process.destroy();
-//		} catch (IOException e) {
-//			System.out.println("IOException");
-//		} catch (InterruptedException e) {
-//			System.out.println("IOException");
-//		}
-//		
-//		System.out.println(command.toString());
-		
-
-		
-		
-//		IOException, InterruptedException
 		
 	}
 	

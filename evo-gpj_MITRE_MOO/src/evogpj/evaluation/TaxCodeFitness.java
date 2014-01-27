@@ -30,6 +30,11 @@ public class TaxCodeFitness extends FitnessFunction {
 		this.finalTax = 0;
 	}
 	
+	/*
+	 * METHODS FOR UNIDIRECTIONAL GA
+	 */
+	
+//	evaluates and sets the fitness of each individual in pop
 	@Override
 	public void evalPop(Population pop) {
 		for (Individual individual : pop) {
@@ -37,21 +42,89 @@ public class TaxCodeFitness extends FitnessFunction {
 		}
 	}
 	
-	/**
-	 * 
-	 * sets the total fitness of a clause individual to be the sum of all transactions evaluated
+//	evaluates the fitness of a tax code individual against an iBOB scheme
+	public void eval(Individual ind) {
+		if (this.verbose)
+			System.out.println("INSIDE TAX CODE FITNESS\n");
+		ArrayList<Transaction> transactions = getiBob();
+		double annuityThreshold=0;
+//		use a Parser instance to convert the genotype (list of integers) into a phenotype
+//		(annuityThreshold)
+		Parser p = new Parser();
+		try {
+			annuityThreshold = p.getAnnuityThreshold(ind.getGenotype().getGenotype());
+			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+//		make a new TaxCode object from the found annuityThreshold
+		TaxCode tc = new TaxCode();
+		tc.setAnnuityThreshold(annuityThreshold);
+		
+		Graph graph = new Graph();
+		ArrayList<Entity> nodesList = graph.getNodes();
+		graph.setTransactions(transactions);
+		ArrayList<Transaction> transactionList = graph.getTransactions();
+		
+		Transfer t = new Transfer(nodesList, tc);
+		PrintGraph g = new PrintGraph(nodesList);
+
+//		execute each transaction
+		for(int i=0;i<transactionList.size();i++){
+			if(t.doTransfer((Transaction) transactionList.get(i))){
+				g.printGraph((Transaction) transactionList.get(i));
+			}
+//			when all of the transactions in the list of been completed
+			if (i==transactionList.size()-1){
+//				find who owns the hotel and have them sell it to Brown
+//				see Graph.getFinalTransaction for details
+				Transaction finalTransaction = graph.getFinalTransaction();
+				if (finalTransaction != null) {
+					if (t.doTransfer(finalTransaction)) {
+						g.printGraph(finalTransaction);
+					}
+				}
+				
+//				get the final tax of the primary taxpayer
+				for(int j=0;j<nodesList.size();j++){
+					if(nodesList.get(j).getType().equals("TaxPayer")){
+						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
+							this.finalTax = nodesList.get(j).getTotalTax()+annuityThreshold;
+						}
+						break;
+					}
+				}
+			}
+		}
+		
+		ind.setFitness("TaxCodeFitness",finalTax);
+		if (this.verbose)
+			System.out.println("FITNESS: " + ind.getFitness());
+	}
+
+	/*
+	 * CO-EVOLUTIONARY GA METHODS
 	 */
+	
+//	evaluates and sets the fitness of individual ind as the sum of its fitnesses
+//	when compared against all of population pop
 	public void eval(Individual ind, Population pop ) {
 		double totFitness = 0.0;
-		Parser p = new Parser();
+		ArrayList<Double> fitList = new ArrayList<Double>();
+		
+//		use the Parser to convert the Genotype of each member of pop into a string
+//		representation of a set of transactions
 		for (Individual i : pop) {
+			Parser p = new Parser();
 			try {
 				ArrayList<String> transactions = p.getAction(i.getGenotype().getGenotype());
-				totFitness += getFitnessOfIndividual(ind, transactions);
+				double fit = getFitnessOfIndividual(ind, transactions);
+				fitList.add(fit);
+				totFitness += fit;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-				
+
 		}
 		ind.setFitness(totFitness);
 	}
@@ -59,8 +132,8 @@ public class TaxCodeFitness extends FitnessFunction {
 	
 //	evaluate the fitness of an individual GIVEN A CERTAIN SET OF TRANSACTIONS and returns it
 	public double getFitnessOfIndividual(Individual ind, ArrayList<String> transactions ) {
-
 		double annuityThreshold=0;
+//		use a Parser instance to convert the genotype (list of integers) into a phenotype
 		Parser p = new Parser();
 		try {
 			annuityThreshold = p.getAnnuityThreshold(ind.getGenotype().getGenotype());
@@ -71,37 +144,39 @@ public class TaxCodeFitness extends FitnessFunction {
 		}
 		if (Parameters.Defaults.VERBOSE)
 			System.out.println("Annuity Threshold: "+annuityThreshold+"\n");
-		
+//		make a new TaxCode object from the annuityThreshold
 		TaxCode tc = new TaxCode();
 		tc.setAnnuityThreshold(annuityThreshold);
 		
+//		set up the Graph and Transfer class, and convert string representation of
+//		transaction list into an ArrayList of Transaction objects
 		Graph graph = new Graph();
 		ArrayList<Entity> nodesList = graph.getNodes();
-		
-		graph.createAction(transactions);		//actual fitness
-//		graph.setTransactions(getiBob());	//just iBob
-		
+		graph.createAction(transactions);
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
 		
 		Transfer t = new Transfer(nodesList, tc);
 		PrintGraph g = new PrintGraph(nodesList);
-//		System.out.println(transactions);
+		
+//		execute each transaction
 		for(int i=0;i<transactionList.size();i++){
 
 			if(t.doTransfer((Transaction) transactionList.get(i))){
 				g.printGraph((Transaction) transactionList.get(i));
 			}
 			
+//			when all of the transactions in the list of been completed
 			if (i==transactionList.size()-1){
-				
+//				find who owns the hotel and have them sell it to Brown
+//				see Graph.getFinalTransaction for details
 				Transaction finalTransaction = graph.getFinalTransaction();
 				if (finalTransaction != null) {
 					if (t.doTransfer(finalTransaction)) {
 						g.printGraph(finalTransaction);
 					}
 				}
-				
+//				get the final tax of the primary taxpayer
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){
 						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
@@ -127,16 +202,13 @@ public class TaxCodeFitness extends FitnessFunction {
 		
 		Graph graph = new Graph();
 		ArrayList<Entity> nodesList = graph.getNodes();
-		
-		graph.createAction(transactions);		//actual fitness
-//		graph.setTransactions(getiBob());	//just iBob
-		
+		graph.createAction(transactions);
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
 		
 		Transfer t = new Transfer(nodesList, tc);
 		PrintGraph g = new PrintGraph(nodesList);
-//		System.out.println(transactions);
+//
 		for(int i=0;i<transactionList.size();i++){
 
 			if(t.doTransfer((Transaction) transactionList.get(i))){
@@ -166,64 +238,6 @@ public class TaxCodeFitness extends FitnessFunction {
 	}
 	
 	
-	
-	
-	
-	public void eval(Individual ind) {
-		if (this.verbose)
-			System.out.println("INSIDE TAX CODE FITNESS\n");
-		ArrayList<Transaction> transactions = getiBob();
-		double annuityThreshold=0;
-		Parser p = new Parser();
-		try {
-			annuityThreshold = p.getAnnuityThreshold(ind.getGenotype().getGenotype());
-			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		TaxCode tc = new TaxCode();
-		tc.setAnnuityThreshold(annuityThreshold);
-		
-		Graph graph = new Graph();
-		ArrayList<Entity> nodesList = graph.getNodes();
-//		graph.createAction(transactions);
-		graph.setTransactions(transactions);
-		ArrayList<Transaction> transactionList = graph.getTransactions();
-		Transfer t = new Transfer(nodesList, tc);
-		
-		PrintGraph g = new PrintGraph(nodesList);
-		
-		for(int i=0;i<transactionList.size();i++){
-
-			if(t.doTransfer((Transaction) transactionList.get(i))){
-				g.printGraph((Transaction) transactionList.get(i));
-			}
-			
-			if (i==transactionList.size()-1){
-				
-				Transaction finalTransaction = graph.getFinalTransaction();
-				if (finalTransaction != null) {
-					if (t.doTransfer(finalTransaction)) {
-						g.printGraph(finalTransaction);
-					}
-				}
-				
-				for(int j=0;j<nodesList.size();j++){
-					if(nodesList.get(j).getType().equals("TaxPayer")){
-						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
-							this.finalTax = nodesList.get(j).getTotalTax()+annuityThreshold;
-						}
-						break;
-					}
-				}
-			}
-		}
-		
-		ind.setFitness("TaxCodeFitness",finalTax);
-		if (this.verbose)
-			System.out.println("FITNESS: " + ind.getFitness());
-	}
 
 	
 	public ArrayList<Transaction> getiBob() {

@@ -6,11 +6,11 @@ ELAPSED TIME: 1
 Generation 1
 ELAPSED TIME: 1
 Generation 2
-ELAPSED TIME: 1
+ELAPSED TIME: 2
 Generation 3
 ELAPSED TIME: 2
 Generation 4
-ELAPSED TIME: 2
+ELAPSED TIME: 3
 Generation 5
 ELAPSED TIME: 3
 Info for fitness function TaxFitness

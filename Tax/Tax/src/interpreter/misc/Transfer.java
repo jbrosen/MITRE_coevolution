@@ -20,7 +20,6 @@ import java.util.Iterator;
  */
 public class Transfer {
 	
-	
 	private ArrayList<Entity> nodes; 
 	private TaxCode taxCode;
 	private boolean isTaxable = true;
@@ -244,7 +243,6 @@ public class Transfer {
 			
 			//can't transfer passet to a node which has a passet in node to be transferred
 //			cannot transfer a partnership asset to someone who is in a partnership with that asset
-			
 			for(Entity e: to.getPartners()){
 				if(e.getName().equals(((PartnershipAsset) asset).getName())){
 					if (this.verbose) {
@@ -269,29 +267,28 @@ public class Transfer {
 			 * Potentially need to check the child partners as well for a potential linkage. Won't cause a crash
 			 * but might be logically incorrect
 			 */
-			for(Entity e: to.getPartnershipIn()){
-				if(e.getName().equals(((PartnershipAsset) asset).getName())){
-					if (this.verbose) {
-						System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
-					}
-					fromFound = false;
-				}
-//				for each Partner of TO, check if they are already partners with the PartnshipAsset
-				else if (e.getType() == "Partnership") {
-					for (Entity ee : e.getPartnershipIn()) {
-						if (ee.getName().equals(((PartnershipAsset) asset).getName())) {
-							if (this.verbose) {
-								System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
-							}
-							fromFound = false;
-						}
-					}
-				}
-				/*
-				 * 
-				 */
-				
-			}
+//			for(Entity e: to.getPartnershipIn()){
+//				if(e.getName().equals(((PartnershipAsset) asset).getName())){
+//					if (this.verbose) {
+//						System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+//					}
+//					fromFound = false;
+//				}
+////				for each Partner of TO, check if they are already partners with the PartnshipAsset
+//				else if (e.getType() == "Partnership") {
+//					for (Entity ee : e.getPartnershipIn()) {
+//						if (ee.getName().equals(((PartnershipAsset) asset).getName())) {
+//							if (this.verbose) {
+//								System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+//							}
+//							fromFound = false;
+//						}
+//					}
+//				}
+//			}
+			/*
+			 * 
+			 */
 		}
 //		if the asset to be transfered is an annuity
 		else if (asset.toString().equals("Annuity")){
@@ -334,7 +331,6 @@ public class Transfer {
 //			WHY DON'T YOU HAVE TO CHECK WHETHER THE FMV OF THE SHARE IS THE SAME/LESS THAN/EQUAL TO THE CASH VALUE
 			//check to see the other asset is a share.
 			if(otherAsset.toString().equals("Share")){
-				
 				
 				ArrayList<Cash> fromCash = from.getCash();
 //				if there is enough money in FROM's portfolio
@@ -437,8 +433,6 @@ public class Transfer {
 									fromFound = true;
 									break;
 								}
-								
-							
 							}
 						}
 //						if the otherAsset is not a share and you need to aggregate cash
@@ -522,7 +516,6 @@ public class Transfer {
 						fromFound = false;
 						break;
 					}
-					
 				}
 				
 				/*

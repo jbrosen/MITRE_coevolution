@@ -143,11 +143,11 @@ public class Graph {
 		/*
 		 * Test to see what happens if we require that the hotel be sold by NewCo in the end
 		 */
-		Material m2 = new Material(200,"Hotel",1);
-		Cash c2 = new Cash(200);
-		Actions a1 = new Actions("NewCo","Brown",m2);
-		Actions a2 = new Actions("Brown","NewCo",c2);
-		finalTransaction = new Transaction(a1,a2);
+//		Material m2 = new Material(200,"Hotel",1);
+//		Cash c2 = new Cash(200);
+//		Actions a1 = new Actions("NewCo","Brown",m2);
+//		Actions a2 = new Actions("Brown","NewCo",c2);
+//		finalTransaction = new Transaction(a1,a2);
 		
 		return finalTransaction;
 	}

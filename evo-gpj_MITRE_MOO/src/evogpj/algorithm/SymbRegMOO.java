@@ -217,7 +217,6 @@ public class SymbRegMOO {
             POP_SIZE = Integer.valueOf(props.getProperty(Parameters.Names.POP_SIZE));
         if (props.containsKey(Parameters.Names.NUM_GENS))
             NUM_GENS = Integer.valueOf(props.getProperty(Parameters.Names.NUM_GENS));
-     
     }
     
     /**
@@ -266,7 +265,7 @@ public class SymbRegMOO {
      	
      	initialize = new ListInitialize(rand);
     	
-
+     	
         // Set up operators.
         if (SELECT.equals(Parameters.Operators.TOURNEY_SELECT)) {
             select = new TournamentSelection(rand, props);
@@ -512,8 +511,7 @@ public class SymbRegMOO {
 			else
 				System.out.println("terminated with genotype: " + best.getGenotype().toString());
 				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
-			
-
+				System.out.println("terminated with fitness: " + best.getFitness());
 		}
 		catch (IOException e) {
 			System.out.println("\nSomething's wrong\n");

@@ -212,7 +212,7 @@ public class Parser {
 		
 		ArrayList<Integer> genotypeList1 = generateRandomList(20);
 //		generateActions(genotypeList);
-		generateAnnuityThreshold(genotypeList1);
+		generateAnnuityThreshold(genotypeList);
 		return this.annuityThreshold;
 	}
 	
@@ -249,9 +249,9 @@ public class Parser {
 				}
 				time_out+=1;
 			}
-		//System.out.println("Phenotype created: " + s);
-		this.phenotype = s;
 		
+		this.phenotype = s;
+//		System.out.println("Phenotype created: " + s);
 		createAnnuityThreshold(s);
 		//return this.actions;
 		

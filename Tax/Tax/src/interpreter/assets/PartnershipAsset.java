@@ -15,7 +15,6 @@ public class PartnershipAsset extends Assets{
 	private double share;
 	private double outsideBasis;
 	
-
 	public PartnershipAsset(double share,String name){	
 		this.name = name;
 		this.share = share;
@@ -46,35 +45,35 @@ public class PartnershipAsset extends Assets{
 		double outsideBasis=0;
 		ArrayList<Entity> nodes = Graph.nodesList;
 		Entity child = null;
+//		find the node that represents yourself in the Graph
 		for(Entity e: nodes){
 			if(this.name.equals(e.getName())){
 				child = e;
 				break;
 			}
 		}
+//		for every owner of the PartnershipAsset
 		for(String ownerName:this.getOwners().keySet()){
-	
+//			for every asset in the Partnership's portfolio
 			for(Assets asset: child.getPortfolio()){
+//				recursively call the method if the asset is also a PartnershipAsset
 				if(asset.toString().equals("PartnershipAsset")){
 					outsideBasis += ((PartnershipAsset) asset).getOutsideBasis()*(this.getShare()/100);
 				}
+//				find the asset owned by the partnership and its corresponding owner
 				else if(asset.getOwners().containsKey(ownerName)){
 					//check if the name is in the inside Basis Map first.If so, then use that.
 					if(asset.getInsideBasisMap().containsKey(ownerName)){
 						outsideBasis+=asset.getInsideBasisMap().get(ownerName);
 						//System.out.println("outside basis in map:" + outsideBasis);
-
 					}
-					else{
+					else {
 						//System.out.println("outside basis not in map:" + asset.getInsideBasis());
-
 						outsideBasis += asset.getInsideBasis();
 					}
 				}
 			}
-	}
-		//System.out.println("VALUE OF OUTSIDE BASIS:" + outsideBasis);
-
+		}
 		return outsideBasis;
 	}
 	
@@ -103,7 +102,7 @@ public class PartnershipAsset extends Assets{
 //			and for all assets that the Partnership owns
 			for(Assets asset: child.getPortfolio()){
 				//System.out.println("asset found:"+ asset.toString());
-				
+//				CHECK WHAT MY ASSETS
 //				if the asset owned by the Partnership is also owned by an entity with a share in the partnership
 				if(asset.getOwners().containsKey(ownerName) ){
 //					Add the CFMV of the asset to this asset
@@ -172,11 +171,11 @@ public class PartnershipAsset extends Assets{
 
 	
 		//change name of owner before transfer
-			fromAsset.getOwners().clear();
-			fromAsset.getOwners().put(to.getName(), otherAsset.getCurrentFMV());
-			toPortfolio.add(fromAsset);
-			fromPortfolio.remove(fromAsset);
-			update(from,to,otherAsset);
+		fromAsset.getOwners().clear();
+		fromAsset.getOwners().put(to.getName(), otherAsset.getCurrentFMV());
+		toPortfolio.add(fromAsset);
+		fromPortfolio.remove(fromAsset);
+		update(from,to,otherAsset);
 		
 	}
 	

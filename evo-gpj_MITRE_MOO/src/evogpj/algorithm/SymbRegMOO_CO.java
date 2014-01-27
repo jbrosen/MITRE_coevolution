@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
+import java.util.Random;
 
 import evogpj.algorithm.SymbRegMOO.FitnessComparator;
 import evogpj.evaluation.FitnessFunction;
@@ -86,6 +87,7 @@ public class SymbRegMOO_CO {
         if (timeout > 0)
             TIMEOUT = startTime + (timeout * 1000);
         loadParams(props);
+        SEED = Long.parseLong("1390852853976");
         create_operators(props,SEED);
     }
 	
@@ -120,6 +122,7 @@ public class SymbRegMOO_CO {
     
     private void create_operators(Properties props, long seed) throws IOException {
     	System.out.println("Running evogpj with seed: " + seed);
+    	
         rand = new MersenneTwisterFast(seed);
     	Graph graph = new Graph();
     	fitnessFunctions.clear();
@@ -133,7 +136,6 @@ public class SymbRegMOO_CO {
     	
 //    	Tournament selector by default, maybe change later
         select = new TournamentSelection(rand, props);
-
         mutate = new ListMutate(rand, POP_SIZE);
         xover = new ListSinglePointCrossover(rand);
         
@@ -186,7 +188,9 @@ public class SymbRegMOO_CO {
      */
     protected Population getSubPopulation(Population aPop) {
     	Population copy = new Population(aPop);
-    	Collections.shuffle(copy);
+    	Random randShuffle = new Random(SEED);
+    	
+    	Collections.shuffle(copy,randShuffle);
     	Population ret = new Population();
     	for (int i=0;i<NUM_CHOOSE;++i) {
     		ret.add(copy.get(i));
@@ -194,14 +198,24 @@ public class SymbRegMOO_CO {
     	return ret;
     }
     
+    protected Population getOtherPopulation(String fitnessName) {
+    	ArrayList<String> fitnessNames = new ArrayList<String>(fitnessFunctions.keySet());
+    	String otherFitness = "";
+    	for (String fName : fitnessNames) {
+    		if (!fName.equals(fitnessName)) {
+    			otherFitness = fName;
+    			break;
+    		}
+    	}
+    	return pops.get(otherFitness);
+    }
     
-    protected void step_evo() throws GPException {
+    protected void step() throws GPException {
 //    	get the names of the two fitness functions
     	ArrayList<String> fitnessNames = new ArrayList<String>(fitnessFunctions.keySet());
 //    	for both populations, this is basically the same as the previous step method
     	for (String fit : fitnessNames) {
-	        // generate children from previous population. don't use elitism
-	        // here since that's done later
+//	        generate children from previous population
 	        childPop = new Population();
 	        Population children;
 	    	
@@ -229,15 +243,9 @@ public class SymbRegMOO_CO {
 	            } 
 	        }
 	        
-
-//	        Compare each individual from both populations to all individuals from the other
-//	        pretty kludgy, fix later
-	        Population otherPop;
-	        if (fit == "TaxFitness") {
-	        	otherPop = pops.get("TaxCodeFitness");
-	        }
-	        else
-	        	otherPop = pops.get("TaxFitness");
+	        
+	        Population otherPop = getOtherPopulation(fit);
+	        
 	        FitnessFunction f = fitnessFunctions.get(fit);
 	        
 	        for (Individual ind : childPop) {
@@ -283,7 +291,7 @@ public class SymbRegMOO_CO {
         	System.out.println(props.toString());
         return props;
 }
-    public LinkedHashMap<String,Individual> run_population_evo() throws IOException {
+    public LinkedHashMap<String,Individual> run_population() throws IOException {
   	
 //    Hashmap of the best population that accumulates over the generations of the two populations
   	  bestPops = new LinkedHashMap<String,Population>();
@@ -312,7 +320,7 @@ public class SymbRegMOO_CO {
           System.out.format("Generation %d\n", generation);
           System.out.flush();
           try {
-              step_evo();
+              step();
           } catch (GPException e) {
               System.exit(-1);
           }
@@ -351,7 +359,7 @@ public class SymbRegMOO_CO {
 	 * Main
 	 */
 	public static void main(String args[]) throws FileNotFoundException {
-		boolean bash = true;
+		boolean bash = false;
 		
 //		different output stream depending on whether running from local machine or VM
 		PrintStream out;
@@ -379,12 +387,14 @@ public class SymbRegMOO_CO {
 		
 		if (props.containsKey("rng_seed"))
 			seed = Integer.parseInt(props.getProperty("rng_seed"));
+		
+		
 
 		SymbRegMOO_CO srm;
 		System.out.println("running trial ");
 		try {
 			srm = new SymbRegMOO_CO(props, seed);
-			LinkedHashMap<String,Individual> bests = srm.run_population_evo();
+			LinkedHashMap<String,Individual> bests = srm.run_population();
 			ArrayList<String> fitnessNames = new ArrayList<String>(bests.keySet());
 			for (String fname : fitnessNames) {
 				Individual bestOne = (Individual)bests.get(fname);
@@ -395,6 +405,7 @@ public class SymbRegMOO_CO {
 					System.out.println("Info for fitness function "+fname);
 					System.out.println("terminated with genotype: " + bestOne.getGenotype().toString());
 					System.out.println("terminated with phenotype: " + bestOne.getPhenotype().getPhenotype());
+					System.out.println("terminated with fitness: " + bestOne.getFitness());
 				}
 			}
 		}

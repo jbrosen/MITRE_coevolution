@@ -51,23 +51,22 @@ public class Material extends Assets{
 			double totalIFMV=0;
 //			for each owner of the asset being transfered
 			for(String name : from.getAssetToBeTransferredClone().getOwners().keySet()){
-//				bump up the total initial market value
+//				increment the total initial market value
 				totalIFMV+=from.getAssetToBeTransferredClone().getOwners().get(name);
 //				find the owner from the for loop above to get the PartnerData object of this
 				for(PartnerData partnerData: from.getPartnerData()){
 					if(partnerData.getName().equals(name)){
-//						if the inside basis is already calculated
+//						if they already have an inside basis
 						if(from.getAssetToBeTransferredClone().getInsideBasisMap().containsKey(name)){
 //							set the tax value of its share in the partnership to be its market value minus the inside basis
 							double insideBasis = from.getAssetToBeTransferredClone().getInsideBasisMap().get(name);
 							if (this.verbose)
 								System.out.println("I AM HERE AND MY TOTAL VALUE IS:"+ insideBasis);
-
+							
 							tax = from.getAssetToBeTransferredClone().getOwners().get(name) - insideBasis;
 							if (this.verbose)
 								System.out.println("I AM HERE AND MY TOTAL VALUE IS:"+ tax);
 							partnerData.setTaxValue(tax);
-	
 						}
 						else{
 							tax = Math.max(0.0,from.getAssetToBeTransferredClone().getOwners().get(name) - from.getAssetToBeTransferredClone().getInsideBasis());
@@ -121,8 +120,6 @@ public class Material extends Assets{
 			}
 		}
 	}
-	
-	
 	
 	/*
 	 * Performs a Material transfer operation between two entities.
