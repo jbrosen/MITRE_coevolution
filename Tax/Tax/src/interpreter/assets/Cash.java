@@ -56,6 +56,9 @@ public class Cash extends Assets{
 			if (this.verbose)
 				System.out.println("SHARE");
 			
+			
+			fromPortfolio.remove(fromAsset);
+			
 			this.setInsideBasis(this.getCurrentFMV());
 			for(String s : from.getAssetToBeTransferredClone().getOwners().keySet()){
 				this.getOwners().put(s, this.getCurrentFMV());

@@ -38,7 +38,6 @@ public class PartnershipAsset extends Assets{
 		return share;
 	}
 	
-	
 	public double getOutsideBasis(){
 		//System.out.println("INSIDE RECURSIVE OUTSIDE BASIS");
 
@@ -98,16 +97,16 @@ public class PartnershipAsset extends Assets{
 		}
 //		for all entities that own a share in the PartnershipAsset
 		for(String ownerName:this.getOwners().keySet()){
-			//System.out.println("OWNER NAME:" + ownerName);
+//			System.out.println("OWNER NAME:" + ownerName);
 //			and for all assets that the Partnership owns
 			for(Assets asset: child.getPortfolio()){
-				//System.out.println("asset found:"+ asset.toString());
+//				System.out.println("asset found:"+ asset.toString());
 //				CHECK WHAT MY ASSETS
 //				if the asset owned by the Partnership is also owned by an entity with a share in the partnership
 				if(asset.getOwners().containsKey(ownerName) ){
 //					Add the CFMV of the asset to this asset
 					CFMV += asset.getCurrentFMV();
-					//System.out.println("VALUE OF CFMV:" + CFMV);
+//					System.out.println("VALUE OF CFMV:" + CFMV);
 				}
 //				otherwise, if the asset that this Partnership owns is also a PartnershipAsset 
 				else if(asset.toString().equals("PartnershipAsset")){
@@ -115,9 +114,11 @@ public class PartnershipAsset extends Assets{
 //					I think the problem arises when the asset tries to call itself.
 //					Should I put a clause in that passes it up? Or is it illegal to begin with?
 					CFMV += asset.getCurrentFMV() * (this.getShare()/100);
+//					System.out.println("VALUE OF CFMV:" + CFMV);
 				}
 			}
 		}
+//		System.out.println("CFMV: "+CFMV);
 		return CFMV;
 	}
 	

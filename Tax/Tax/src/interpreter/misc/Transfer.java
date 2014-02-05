@@ -25,6 +25,7 @@ public class Transfer {
 	private boolean isTaxable = true;
 	private boolean verbose = Parameters.Defaults.VERBOSE;
 	
+	
 	public Transfer(ArrayList<Entity> nodes, TaxCode taxCode){
 		this.nodes = (ArrayList<Entity>) nodes;
 		this.taxCode = taxCode;
@@ -156,7 +157,14 @@ public class Transfer {
 		else if(asset1.toString().equals("Material") && asset2.toString().equals("PartnershipAsset")){
 			return false;
 		}
-		
+		if (!taxCode.getAnnuityForMaterial()) {
+			if(asset1.toString().equals("Material") && asset2.toString().equals("Annuity")) {
+				return false;
+			}
+			else if(asset1.toString().equals("Annuity") && asset2.toString().equals("Material")) {
+				return false;
+			}
+		}
 		return true;
 	}
 	
@@ -182,7 +190,6 @@ public class Transfer {
 			}
 			return false;
 		}
-		
 		return true;
 	}
 	
@@ -214,7 +221,6 @@ public class Transfer {
 					if (this.verbose) {
 						System.out.println("PASSET VALUE:" + ((PartnershipAsset) fromAsset).getCurrentFMV());
 						System.out.println("OTHER ASSER VALUE:" + otherAsset.getCurrentFMV());
-						System.out.println("FRMO ASSET: "+((PartnershipAsset)fromAsset).printPAsset());
 					}
 //					three conditions for transfer
 //					1) current market value of asset must be less than or equal to FMV of asset its being transfered for
@@ -267,25 +273,28 @@ public class Transfer {
 			 * Potentially need to check the child partners as well for a potential linkage. Won't cause a crash
 			 * but might be logically incorrect
 			 */
-//			for(Entity e: to.getPartnershipIn()){
-//				if(e.getName().equals(((PartnershipAsset) asset).getName())){
-//					if (this.verbose) {
-//						System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
-//					}
-//					fromFound = false;
-//				}
-////				for each Partner of TO, check if they are already partners with the PartnshipAsset
-//				else if (e.getType() == "Partnership") {
-//					for (Entity ee : e.getPartnershipIn()) {
-//						if (ee.getName().equals(((PartnershipAsset) asset).getName())) {
-//							if (this.verbose) {
-//								System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
-//							}
-//							fromFound = false;
-//						}
-//					}
-//				}
-//			}
+			if (taxCode.getChildSalePrevention() > 0) {
+				for(Entity e: to.getPartnershipIn()){
+					if(e.getName().equals(((PartnershipAsset) asset).getName())){
+						if (this.verbose) {
+							System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+						}
+						fromFound = false;
+					}
+	//					for each Partner of TO, check if they are already partners with the PartnshipAsset
+					else if (e.getType() == "Partnership" && taxCode.getChildSalePrevention() > 1) {
+						for (Entity ee : e.getPartnershipIn()) {
+							if (ee.getName().equals(((PartnershipAsset) asset).getName())) {
+								if (this.verbose) {
+									System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+								}
+								fromFound = false;
+							}
+						}
+					}
+				}
+			}
+			
 			/*
 			 * 
 			 */
@@ -301,6 +310,12 @@ public class Transfer {
 			if(asset.getCurrentFMV() < otherAsset.getCurrentFMV()){
 				 fromFound = false;
 			 }
+			
+//			just messing around
+			if (taxCode.getChildSalePrevention() > 1) {
+				if (from.getName() == "Brown")
+					fromFound = false;
+			}
 
 		}
 //		if the asset to be transfered is a material
@@ -324,14 +339,14 @@ public class Transfer {
 						break;
 					}
 				}
-			}		
+			}
 		}
 //		if the asset to be transfered is cash
 		else if (asset.toString().equals("Cash")){
+			
 //			WHY DON'T YOU HAVE TO CHECK WHETHER THE FMV OF THE SHARE IS THE SAME/LESS THAN/EQUAL TO THE CASH VALUE
 			//check to see the other asset is a share.
 			if(otherAsset.toString().equals("Share")){
-				
 				ArrayList<Cash> fromCash = from.getCash();
 //				if there is enough money in FROM's portfolio
 				
@@ -408,7 +423,7 @@ public class Transfer {
 								break;
 								}
 							}
-					}	
+					}
 					if(fromFound){
 						if (this.verbose) 
 							System.out.println("YES CASH HAS BEEN FOUND");
@@ -436,6 +451,7 @@ public class Transfer {
 							}
 						}
 //						if the otherAsset is not a share and you need to aggregate cash
+//						THIS MIGHT BE A BUG
 						if(fromFound){
 							Cash newCash = new Cash(asset.getCurrentFMV());
 							tempFmv = 0;
@@ -461,16 +477,17 @@ public class Transfer {
 										for(String name : from.getPortfolio().get(i).getOwners().keySet()){
 											newCash.getOwners().put(name,from.getPortfolio().get(i).getOwners().get(name));
 										}
-										from.getPortfolio().remove(i);									
+										from.getPortfolio().remove(i);			
 									}
 								}
 							}
 							from.setAssetToBeTransferred(newCash);
 							from.setAssetToBeTransferredClone(new Cash(newCash));
 						}
-					}	
+					}
 			}
 //			if the from entity is not a partnership AND otherAsset is not a share
+//			NOTE why can't a taxpayer pull cash from multiple Cash objects?
 			else{
 				while(fromItr.hasNext()){
 				fromAsset = fromItr.next();
@@ -492,6 +509,7 @@ public class Transfer {
 					fromAsset.setInsideBasis(fvalue);
 					if(fvalue == 0){
 						fromPortfolio.remove(fromAsset);
+						System.out.println("CASH REMOVED\n\n");
 					}
 				}
 			}
@@ -501,7 +519,6 @@ public class Transfer {
 		}
 //		if the asset to be transfered is a share
 		else{
-
 			isTaxable = false;
 			fromFound = true;
 //			can't purchase a share of a taxpayer
@@ -534,7 +551,7 @@ public class Transfer {
 				}
 			}
 				
-	}
+		}
 
 	return fromFound;
 	}

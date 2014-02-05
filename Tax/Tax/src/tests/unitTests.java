@@ -19,6 +19,7 @@ import interpreter.taxCode.TaxCode;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 
@@ -43,7 +44,7 @@ public class unitTests {
 	Transfer t = new Transfer(nodesList, taxCode);
 	PrintGraph g = new PrintGraph(nodesList);
 	
-	@Test
+//	@Test
 	public void testSymbRegMOO() {
 		
 	}
@@ -193,21 +194,38 @@ public class unitTests {
 	 * Given a list of integers, sets the phenotype to be the choice of annuity threshold that is mod 7
 	 * of the first element of randList
 	 */
-//	@Test
-	public void testGetAnnuityThreshold() {
+	@Test
+	public void testGetClauses() {
 		Parser p = new Parser();
 //		ArrayList<Integer> randList = p.generateRandomList(10);
-		ArrayList<Integer> randList = new ArrayList<Integer>();
-		randList.add(7);
-		randList.add(3);
-		
+		ArrayList<Integer> randList = p.generateRandomList(100);
+		ArrayList<String> clauses = new ArrayList<String>();
 		try{
-			double thresh = p.getAnnuityThreshold(randList);
+			clauses = p.getClauses(randList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		System.out.println(p.getPhenotype());
+		for (int i=0 ; i<clauses.size(); ++i) {
+			System.out.println(i+": "+clauses.get(i));
+		}
+		
+		taxCode.createClauses(clauses);
+		System.out.println(taxCode.getAnnuityThreshold());
+		System.out.println(taxCode.getChildSalePrevention());
+		System.out.println(taxCode.getAnnuityForMaterial());
+		
+//		try {
+//			Class testClass = taxCode.getClass();
+//			Class[] cArg1 = new Class[1];
+//			cArg1[0] = double.class;
+//			Method aMethod = testClass.getMethod("setAnnuityThreshold", cArg1);
+//			System.out.println("method = "+aMethod.toString());
+//		} catch (NoSuchMethodException e) {
+//			e.printStackTrace();
+//		}
+		
+		
 	}
 	
 //	@Test

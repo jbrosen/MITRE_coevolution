@@ -20,12 +20,17 @@ import interpreter.misc.Actions;
 import interpreter.misc.Graph;
 import interpreter.misc.Transaction;
 import interpreter.misc.Transfer;
+import interpreter.misc.Transfer_NEO;
 import interpreter.misc.writeFile;
 import interpreter.taxCode.TaxCode;
+import interpreter.transfers.AssetToAsset;
+import interpreter.transfers.FromAsset;
+import interpreter.transfers.ToAsset;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.junit.Test;
 
@@ -430,25 +435,109 @@ public class testCases {
 		
 		System.out.println("ANSWER #2: "+tcf.getFitnessOfIndividual(50, transactions));
 	}
+
+	
+	/*
+	 * DIFFERENCES IN OLD AND NEW TRANSFER
+	 * Transaction(JonesCo,Brown,Material(200,Hotel,1),Cash(200))
+	 * Old: 78.48, New: Double.MIN_VALUE
+	 * PROBLEM: Even if the transaction is deemed infeasible, the Cash object is still taken away
+	 * from FROM and given to the other entity. Why doesn't this happen in the older version? I 
+	 * probably fucked something up. Fix it when you come back from class
+	 */
+	
 	
 	
 	@Test
+	public void testNewTransfer() {
+		TaxCode tc = new TaxCode();
+		tc.setAnnuityThreshold(0);
+		tc.setChildSalePrevention(1);
+		tc.setAnnuityForMaterial(true);
+		
+		ArrayList<String> ret = new ArrayList<String>();
+//		Transaction(NewCo,Jones,Cash(100),Material(200,Hotel,1))Transaction(JonesCo,Brown,PartnershipAsset(99,NewCo),Annuity(200,30))
+//		ret.add("Transaction(Brown,NewCo,Annuity(200,30),Material(200,Hotel,1))");
+		ret.add("Transaction(JonesCo,Brown,Material(200,Hotel,1),Cash(200))");
+//		ret.add("Transaction(Brown,JonesCo,Cash(200),Material(200,Hotel,1))");
+//		ret.add("Transaction(FamilyTrust,JonesCo,Annuity(200,30),PartnershipAsset(99,NewCo))");
+//		ret.add("Transaction(NewCo,Brown,Material(200,Hotel,1),Cash(200))");
+//		
+		graph.createAction(ret);
+		ArrayList<Transaction> trans = graph.getTransactions();
+//		ArrayList<Transaction> trans = new ArrayList<Transaction>();
+		
+		Annuity a = new Annuity(100,30);
+		PartnershipAsset p = new PartnershipAsset(99,"JonesCo");
+		
+		Actions a1 = new Actions("Jones","FamilyTrust",p);
+		Actions a2 = new Actions("FamilyTrust","Jones",a);
+		Transaction tt1 = new Transaction(a1,a2);
+//		trans.add(tt1);
+		Transfer_NEO tn = new Transfer_NEO(graph, tc);
+		
+		
+
+		
+		for (Transaction tran : trans) {
+			if (tn.doTransfer(tran))
+				g.printGraph(tran);
+		}
+		
+		for (Entity e : nodesList) {
+			if (e.getName() == "Brown") {
+				System.out.println("CASH: "+e.getTotalCash());
+			}
+			for (Assets ass : e.getPortfolio()) {
+				if (ass.toString() == "Cash")
+					System.out.println(e.getName()+" HAS THE CASH");
+			}
+		}
+		
+		
+		
+		Transaction finTran = graph.getFinalTransaction();
+		if (tn.doTransfer(finTran))
+			g.printGraph(finTran);
+		System.out.println(finTran.toString());
+		for (Entity e : nodesList) {
+			if (e.getName()=="Jones") {
+				System.out.println(e.getTotalTax());
+			}
+		}
+		
+	}
+	
+	
+//	@Test
 	public void ibob() {
 		TaxCode tc = new TaxCode();
 		tc.setAnnuityThreshold(0);
+		tc.setChildSalePrevention(1);
+		tc.setAnnuityForMaterial(false);
 		t.setTaxCode(tc);
 		ArrayList<String> ret = new ArrayList<String>();
-//		Transaction(FamilyTrust,JonesCo,Annuity(300,30),PartnershipAsset(99,NewCo))Transaction(Brown,NewCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))
-		ret.add("Transaction(FamilyTrust,JonesCo,Annuity(300,30),PartnershipAsset(99,NewCo))");
-		ret.add("Transaction(Brown,NewCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))");
+//		Transaction(Jones,FamilyTrust,PartnershipAsset(99,JonesCo),Annuity(100,30))
+//		ret.add("Transaction(Brown,JonesCo,Cash(200),Material(200,Hotel,1))");
+		ret.add("Transaction(JonesCo,Brown,Material(200,Hotel,1),Cash(200))");
+		
 		graph.createAction(ret);
 		ArrayList<Transaction> trans = graph.getTransactions();
+
 		for (Transaction r : trans) {
 			if (t.doTransfer(r)) {
 				g.printGraph(r);
 			}
 		}
-		
+		for (Entity e : nodesList) {
+			if (e.getName() == "Brown") {
+				System.out.println("CASH: "+e.getTotalCash());
+			}
+			for (Assets ass : e.getPortfolio()) {
+				if (ass.toString() == "Cash")
+					System.out.println(e.getName()+" HAS THE CASH");
+			}
+		}
 		/*
 		 * Phenotypes that generate Double.MIN_VALUE or 0.0 tax that are NOT iBob
 		 * Transaction(NewCo,Brown,Material(200,Hotel,1),Annuity(300,30)) - Double.MIN_VALUE
@@ -477,8 +566,6 @@ public class testCases {
 		Transaction finTran = graph.getFinalTransaction();
 		if (t.doTransfer(finTran))
 			g.printGraph(finTran);
-		
-
 		
 		for (Entity e : nodesList) {
 			if (e.getName()=="Jones") {

@@ -100,6 +100,7 @@ public class Graph {
 		Jones.setCanBeTaxed(true);
 //		Set beginning tax to be $80 
 		Jones.setTotalTax(Double.MIN_VALUE);
+//		Jones.setTotalTax(1.0);
 //		Jones.setTotalTax(80);
 		
 		this.nodesList.add(Jones);

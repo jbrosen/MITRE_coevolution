@@ -47,19 +47,20 @@ public class TaxCodeFitness extends FitnessFunction {
 		if (this.verbose)
 			System.out.println("INSIDE TAX CODE FITNESS\n");
 		ArrayList<Transaction> transactions = getiBob();
-		double annuityThreshold=0;
+		ArrayList<String> clauses = new ArrayList<String>();
 //		use a Parser instance to convert the genotype (list of integers) into a phenotype
 //		(annuityThreshold)
 		Parser p = new Parser();
+		
 		try {
-			annuityThreshold = p.getAnnuityThreshold(ind.getGenotype().getGenotype());
+			clauses = p.getClauses(ind.getGenotype().getGenotype());
 			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 //		make a new TaxCode object from the found annuityThreshold
-		TaxCode tc = new TaxCode();
-		tc.setAnnuityThreshold(annuityThreshold);
+		TaxCode tc = new TaxCode(clauses);
 		
 		Graph graph = new Graph();
 		ArrayList<Entity> nodesList = graph.getNodes();
@@ -89,7 +90,7 @@ public class TaxCodeFitness extends FitnessFunction {
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){
 						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
-							this.finalTax = nodesList.get(j).getTotalTax()+annuityThreshold;
+							this.finalTax = nodesList.get(j).getTotalTax()+tc.getAnnuityThreshold();
 						}
 						break;
 					}
@@ -132,21 +133,21 @@ public class TaxCodeFitness extends FitnessFunction {
 	
 //	evaluate the fitness of an individual GIVEN A CERTAIN SET OF TRANSACTIONS and returns it
 	public double getFitnessOfIndividual(Individual ind, ArrayList<String> transactions ) {
-		double annuityThreshold=0;
+		
+		ArrayList<String> clauses = new ArrayList<String>();
 //		use a Parser instance to convert the genotype (list of integers) into a phenotype
 		Parser p = new Parser();
+		
 		try {
-			annuityThreshold = p.getAnnuityThreshold(ind.getGenotype().getGenotype());
+			clauses = p.getClauses(ind.getGenotype().getGenotype());
 			ind.setPhenotype(new ListPhenotype(p.getPhenotype()));
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (Parameters.Defaults.VERBOSE)
-			System.out.println("Annuity Threshold: "+annuityThreshold+"\n");
+		
 //		make a new TaxCode object from the annuityThreshold
-		TaxCode tc = new TaxCode();
-		tc.setAnnuityThreshold(annuityThreshold);
+		TaxCode tc = new TaxCode(clauses);
 		
 //		set up the Graph and Transfer class, and convert string representation of
 //		transaction list into an ArrayList of Transaction objects
@@ -180,7 +181,7 @@ public class TaxCodeFitness extends FitnessFunction {
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){
 						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
-							this.finalTax = nodesList.get(j).getTotalTax()+annuityThreshold;
+							this.finalTax = nodesList.get(j).getTotalTax()+tc.getAnnuityThreshold();
 						}
 						break;
 					}
