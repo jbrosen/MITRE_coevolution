@@ -6,6 +6,7 @@ import interpreter.misc.PartnerData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 
 public class Cash extends Assets{
 
@@ -51,13 +52,10 @@ public class Cash extends Assets{
 		Iterator<Assets> toItr = toPortfolio.iterator();
 		boolean fromFound = false;
 		boolean toFound = false;
-
+		
 		if(otherAsset.toString().equals("Share")){
 			if (this.verbose)
 				System.out.println("SHARE");
-			
-			
-			fromPortfolio.remove(fromAsset);
 			
 			this.setInsideBasis(this.getCurrentFMV());
 			for(String s : from.getAssetToBeTransferredClone().getOwners().keySet()){
@@ -107,13 +105,6 @@ public class Cash extends Assets{
 //			if TO is a TaxPayer
 			else{
 				
-				//from Entity not partnership
-				double fvalue = fromAsset.getCurrentFMV() - this.getCurrentFMV();
-				fromAsset.setCurrentFMV(fvalue);
-				if(fvalue == 0){
-					fromPortfolio.remove(fromAsset);
-				}
-				
 				// to Entity not partnership
 				while(toItr.hasNext()){
 					toAsset = (Assets) toItr.next();
@@ -134,7 +125,50 @@ public class Cash extends Assets{
 				}
 
 			}
-		}	
+		}
+		
+		/*
+		 * "this" is the asset that was indicated in the original transaction
+		 * and fromAsset is the one that was eventually selected from the
+		 * entity's portfolio.
+		 * This block does some housekeeping that was originally done in the Transfer class,
+		 * but makes more sense to happen here. Specifically, it sets the new FMV of whatever Cash
+		 * object or objects were used to create the transfered Cash object in FROM's portfolio
+		 * . This can include setting the new inside basis map, or removing it all together.
+		 */
+		if (from.getType() == "TaxPayer") {
+			//from Entity not partnership
+			double fvalue = fromAsset.getCurrentFMV() - this.getCurrentFMV();
+			fromAsset.setCurrentFMV(fvalue);
+			if(fvalue == 0){
+				fromPortfolio.remove(fromAsset);
+			}
+		}
+		else if (from.getType() == "Partnership") {
+			HashMap<String,Double> newCashOwners = fromAsset.getOwners();
+//			look in every element of the Partnership's portfolio
+			for (int i = 0 ; i < fromPortfolio.size() ; ++i) {
+//				if the asset is Cash
+				if (fromPortfolio.get(i).toString() == "Cash") {
+					Cash thisCash = (Cash)fromPortfolio.get(i);
+//					get the owner(s) of the cash object and see if it is one of the cash objects
+//					contributed to the exchanged cash object
+					for (String name : thisCash.getOwners().keySet()) {
+						if (newCashOwners.containsKey(name)) {
+//							get the amount that the owner in question constributed to the original cash object
+							double fval = thisCash.getOwners().get(name) - newCashOwners.get(name);
+							from.getPortfolio().get(i).setCurrentFMV(fval);
+							from.getPortfolio().get(i).setInsideBasis(fval);
+							from.getPortfolio().get(i).getOwners().put(name,fval);
+							if (fval == 0) {
+								from.getPortfolio().remove(i);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	@Override

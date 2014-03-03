@@ -509,7 +509,6 @@ public class Transfer {
 					fromAsset.setInsideBasis(fvalue);
 					if(fvalue == 0){
 						fromPortfolio.remove(fromAsset);
-						System.out.println("CASH REMOVED\n\n");
 					}
 				}
 			}

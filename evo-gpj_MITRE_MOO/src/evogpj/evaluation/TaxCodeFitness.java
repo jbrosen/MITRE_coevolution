@@ -11,6 +11,7 @@ import interpreter.misc.Actions;
 import interpreter.misc.Graph;
 import interpreter.misc.Transaction;
 import interpreter.misc.Transfer;
+import interpreter.misc.Transfer_NEO;
 import interpreter.taxCode.TaxCode;
 
 import java.io.IOException;
@@ -25,9 +26,11 @@ import evogpj.gp.Population;
 public class TaxCodeFitness extends FitnessFunction {
 	private double finalTax;
 	private boolean verbose = Parameters.Defaults.VERBOSE;
+	private double auditScore;
 	
 	public TaxCodeFitness(Graph graph) {
 		this.finalTax = 0;
+		this.auditScore = 0;
 	}
 	
 	/*
@@ -41,12 +44,19 @@ public class TaxCodeFitness extends FitnessFunction {
 			this.eval(individual);
 		}
 	}
-	
+	public double getFinalTax() {
+		return this.finalTax;
+	}
+	public double getAuditScore() {
+		return this.auditScore;
+	}
 //	evaluates the fitness of a tax code individual against an iBOB scheme
 	public void eval(Individual ind) {
 		if (this.verbose)
 			System.out.println("INSIDE TAX CODE FITNESS\n");
 		ArrayList<Transaction> transactions = getiBob();
+		transactions = getJunkTransaction();
+		
 		ArrayList<String> clauses = new ArrayList<String>();
 //		use a Parser instance to convert the genotype (list of integers) into a phenotype
 //		(annuityThreshold)
@@ -61,27 +71,33 @@ public class TaxCodeFitness extends FitnessFunction {
 
 //		make a new TaxCode object from the found annuityThreshold
 		TaxCode tc = new TaxCode(clauses);
-		
+		auditScore = 0.0;
 		Graph graph = new Graph();
 		ArrayList<Entity> nodesList = graph.getNodes();
 		graph.setTransactions(transactions);
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
-		Transfer t = new Transfer(nodesList, tc);
+		Transfer_NEO tn = new Transfer_NEO(graph, tc);
 		PrintGraph g = new PrintGraph(nodesList);
-
+		
+		
 //		execute each transaction
 		for(int i=0;i<transactionList.size();i++){
-			if(t.doTransfer((Transaction) transactionList.get(i))){
+			if(tn.doTransfer((Transaction) transactionList.get(i))){
+				auditScore += ((Transaction)transactionList.get(i)).getAuditScore();
 				g.printGraph((Transaction) transactionList.get(i));
 			}
+			
+			
+
 //			when all of the transactions in the list of been completed
 			if (i==transactionList.size()-1){
 //				find who owns the hotel and have them sell it to Brown
 //				see Graph.getFinalTransaction for details
 				Transaction finalTransaction = graph.getFinalTransaction();
 				if (finalTransaction != null) {
-					if (t.doTransfer(finalTransaction)) {
+					if (tn.doTransfer(finalTransaction)) {
+						auditScore += finalTransaction.getAuditScore();
 						g.printGraph(finalTransaction);
 					}
 				}
@@ -90,7 +106,7 @@ public class TaxCodeFitness extends FitnessFunction {
 				for(int j=0;j<nodesList.size();j++){
 					if(nodesList.get(j).getType().equals("TaxPayer")){
 						if(((TaxPayer) nodesList.get(j)).getCanBeTaxed()){
-							this.finalTax = nodesList.get(j).getTotalTax()+tc.getAnnuityThreshold();
+							this.finalTax = nodesList.get(j).getTotalTax();
 						}
 						break;
 					}
@@ -98,11 +114,14 @@ public class TaxCodeFitness extends FitnessFunction {
 			}
 		}
 		
-		ind.setFitness("TaxCodeFitness",finalTax);
+		ind.setFitness("TaxCodeFitness",this.finalTax + ((80 - this.finalTax)*auditScore));
+		
+//		ind.setFitness("TaxCodeFitness",finalTax);
+//		System.out.println(auditScore);
 		if (this.verbose)
 			System.out.println("FITNESS: " + ind.getFitness());
 	}
-
+	
 	/*
 	 * CO-EVOLUTIONARY GA METHODS
 	 */
@@ -162,7 +181,7 @@ public class TaxCodeFitness extends FitnessFunction {
 		
 //		execute each transaction
 		for(int i=0;i<transactionList.size();i++){
-
+			
 			if(t.doTransfer((Transaction) transactionList.get(i))){
 				g.printGraph((Transaction) transactionList.get(i));
 			}
@@ -263,6 +282,15 @@ public class TaxCodeFitness extends FitnessFunction {
 		return ret;
 		
 	}
+	
+	public ArrayList<Transaction> getJunkTransaction() {
+		Graph g1 = new Graph();
+		ArrayList<String> ss = new ArrayList<String>();
+		ss.add("Transaction(Jones,JonesCo,Annuity(200,30),PartnershipAsset(99,NewCo))");
+		g1.createAction(ss);
+		return g1.getTransactions();
+	}
+	
 	
 	public Boolean isMaximizingFunction() {
 		return true;

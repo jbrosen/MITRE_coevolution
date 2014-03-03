@@ -27,9 +27,12 @@ import interpreter.transfers.AssetToAsset;
 import interpreter.transfers.FromAsset;
 import interpreter.transfers.ToAsset;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import org.junit.Test;
@@ -444,44 +447,161 @@ public class testCases {
 	 * PROBLEM: Even if the transaction is deemed infeasible, the Cash object is still taken away
 	 * from FROM and given to the other entity. Why doesn't this happen in the older version? I 
 	 * probably fucked something up. Fix it when you come back from class
+	 * SOLVED
+	 * 
+	 * Transaction(JonesCo,Brown,Material(200,Hotel,1),Material(200,Hotel,1))Transaction(Brown,FamilyTrust,Material(200,Hotel,1),PartnershipAsset(99,JonesCo))
+	 * Transaction(Brown,JonesCo,Cash(200),Material(200,Hotel,1))
+	 * OLD: Double.MIN_VALUE, New: -78.408
+	 * 
+	 * Transaction(NewCo,FamilyTrust,Annuity(100,30),Annuity(300,30))Transaction(Brown,Jones,Annuity(200,30),PartnershipAsset(99,JonesCo))
+	 * Transaction(FamilyTrust,NewCo,Annuity(300,30),Material(200,Hotel,1))
+	 * 
 	 */
 	
 	
+	/*
+	 * Action1: from: NewCo to: Jones Asset: Material and Action2: from: Jones to: NewCo Asset: Annuity
+	Action1: from: JonesCo to: FamilyTrust Asset: PartnershipAsset and Action2: from: FamilyTrust to: JonesCo Asset: Annuity
+	Action1: from: Jones to: Brown Asset: Material and Action2: from: Brown to: Jones Asset: Cash
+	Action1: from: Brown to: JonesCo Asset: Material and Action2: from: JonesCo to: Brown Asset: Annuity
+	Action1: from: Jones to: Brown Asset: PartnershipAsset and Action2: from: Brown to: Jones Asset: AnnuityAction1: from: FamilyTrust to: Jones Asset: PartnershipAsset and Action2: from: Jones to: FamilyTrust Asset: Annuity
+	Action1: from: JonesCo to: Jones Asset: Annuity and Action2: from: Jones to: JonesCo Asset: PartnershipAsset
+	 */
 	
 	@Test
+	public void parseTaxCodeFitnessOutput() {
+		
+	}
+	
+	
+	@Test
+	public void parseTaxFitnessOutput() {
+		String fname = "C:\\Users\\Jacob\\Documents\\MIT\\SCOTE\\MITRE_coevolution\\Tax\\Tax\\src\\interpreter\\agg1.txt";
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(fname));
+			String line = null;
+			ArrayList<String> trans = new ArrayList<String>();
+			ArrayList<ArrayList<String>> finalTransactions = new ArrayList<ArrayList<String>>();
+			try{
+				while ((line = reader.readLine()) != null ) {
+					if (line.endsWith(")")) {
+						trans.add(line);
+//						System.out.println("HI"+line);
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			for (String tran : trans) {
+//				graph.setTransactions(new ArrayList<Transaction>());
+				graph = new Graph();
+				String[] splitTrans = tran.split("\\)\\)");
+				ArrayList<String> finTran = new ArrayList<String>();
+				for (int i = 0 ; i < splitTrans.length ; ++i) {
+					finTran.add(splitTrans[i].trim()+"))");
+//					System.out.println("HI"+finTran.get(i));
+				}
+				TaxCode tc = new TaxCode();
+				
+				graph.createAction(finTran);
+				Transfer_NEO tn = new Transfer_NEO(graph, tc);
+				ArrayList<Transaction> transactions = graph.getTransactions();
+				ArrayList<String> legalTransactions = new ArrayList<String>();
+				
+//				for (Transaction t1 : transactions) {
+////					System.out.println(t1.toString());
+//					if (tn.doTransfer(t1)) {
+//						legalTransactions.add(t1);
+//					}
+//				}
+				
+				for (int i = 0 ; i < transactions.size() ; ++i) {
+					if (tn.doTransfer(transactions.get(i))) {
+						legalTransactions.add(finTran.get(i));
+					}
+				}
+//				System.out.print("\n");
+				finalTransactions.add(legalTransactions);
+				
+			}
+			
+//			print  out the legal tranactions
+//			for (ArrayList<String> tt : finalTransactions) {
+//				for (String t : tt) {
+//					System.out.print(t);
+//				}
+//				if (tt.size()>0)
+//					System.out.print("\n");
+//			}
+			
+			ArrayList<String> combinedTrans = new ArrayList<String>();
+			for (ArrayList<String> tr : finalTransactions) {
+				String total = "";
+				for (String s : tr) {
+					total += s;
+				}
+				combinedTrans.add(total);
+			}
+			
+			
+			HashMap<String,Integer> transactionCount = new HashMap<String,Integer>();
+			for (String tr : combinedTrans) {
+				if (transactionCount.containsKey(tr)) {
+					transactionCount.put(tr,transactionCount.get(tr)+1);
+				}
+				else {
+					transactionCount.put(tr, 1);
+				}
+			}
+			
+			for (String s : transactionCount.keySet()) {
+				System.out.println(s+", "+transactionCount.get(s));
+			}
+			
+			System.out.println(combinedTrans.size());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	
+//	@Test
 	public void testNewTransfer() {
 		TaxCode tc = new TaxCode();
-		tc.setAnnuityThreshold(0);
-		tc.setChildSalePrevention(1);
-		tc.setAnnuityForMaterial(true);
+//		tc.setAnnuityThreshold(0);
+//		tc.setChildSalePrevention(1);
+//		tc.setAnnuityForMaterial(true);
 		
+		/*
+		 * Why does this not generate any tax?
+		 * Transaction(Brown,Jones,Annuity(300,30),PartnershipAsset(99,JonesCo))
+		 */
+		
+		
+//		Transaction(Brown,JonesCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))Transaction(Jones,Brown,Cash(200),Cash(200))
+//		Transaction(NewCo,Jones,Material(200,Hotel,1),Annuity(300,30))Transaction(Brown,NewCo,PartnershipAsset(99,FamilyTrust),PartnershipAsset(99,JonesCo))
 		ArrayList<String> ret = new ArrayList<String>();
 //		Transaction(NewCo,Jones,Cash(100),Material(200,Hotel,1))Transaction(JonesCo,Brown,PartnershipAsset(99,NewCo),Annuity(200,30))
-//		ret.add("Transaction(Brown,NewCo,Annuity(200,30),Material(200,Hotel,1))");
-		ret.add("Transaction(JonesCo,Brown,Material(200,Hotel,1),Cash(200))");
-//		ret.add("Transaction(Brown,JonesCo,Cash(200),Material(200,Hotel,1))");
-//		ret.add("Transaction(FamilyTrust,JonesCo,Annuity(200,30),PartnershipAsset(99,NewCo))");
-//		ret.add("Transaction(NewCo,Brown,Material(200,Hotel,1),Cash(200))");
+		ret.add("Transaction(Brown,JonesCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))");
+		ret.add("Transaction(Jones,Brown,Cash(200),Cash(200))");
+		ret.add("Transaction(NewCo,Jones,Material(200,Hotel,1),Annuity(300,30))");
+		ret.add("Transaction(Brown,NewCo,PartnershipAsset(99,FamilyTrust),PartnershipAsset(99,JonesCo))");
+
 //		
 		graph.createAction(ret);
 		ArrayList<Transaction> trans = graph.getTransactions();
 //		ArrayList<Transaction> trans = new ArrayList<Transaction>();
 		
-		Annuity a = new Annuity(100,30);
-		PartnershipAsset p = new PartnershipAsset(99,"JonesCo");
-		
-		Actions a1 = new Actions("Jones","FamilyTrust",p);
-		Actions a2 = new Actions("FamilyTrust","Jones",a);
-		Transaction tt1 = new Transaction(a1,a2);
-//		trans.add(tt1);
 		Transfer_NEO tn = new Transfer_NEO(graph, tc);
-		
-		
-
-		
+		double auditScore = 0.0;
 		for (Transaction tran : trans) {
-			if (tn.doTransfer(tran))
+			if (tn.doTransfer(tran)) {
 				g.printGraph(tran);
+				auditScore += tran.getAuditScore();
+			}
 		}
 		
 		for (Entity e : nodesList) {
@@ -494,12 +614,12 @@ public class testCases {
 			}
 		}
 		
-		
-		
 		Transaction finTran = graph.getFinalTransaction();
-		if (tn.doTransfer(finTran))
+		if (tn.doTransfer(finTran)) {
 			g.printGraph(finTran);
-		System.out.println(finTran.toString());
+			auditScore += finTran.getAuditScore();
+		}
+		System.out.println(finTran.toString()+", "+auditScore);
 		for (Entity e : nodesList) {
 			if (e.getName()=="Jones") {
 				System.out.println(e.getTotalTax());
@@ -514,12 +634,16 @@ public class testCases {
 		TaxCode tc = new TaxCode();
 		tc.setAnnuityThreshold(0);
 		tc.setChildSalePrevention(1);
-		tc.setAnnuityForMaterial(false);
+		tc.setAnnuityForMaterial(true);
 		t.setTaxCode(tc);
 		ArrayList<String> ret = new ArrayList<String>();
 //		Transaction(Jones,FamilyTrust,PartnershipAsset(99,JonesCo),Annuity(100,30))
+		ret.add("Transaction(Brown,Jones,Annuity(200,30),PartnershipAsset(99,JonesCo))");
+		ret.add("Transaction(FamilyTrust,NewCo,Annuity(300,30),Material(200,Hotel,1))");
 //		ret.add("Transaction(Brown,JonesCo,Cash(200),Material(200,Hotel,1))");
-		ret.add("Transaction(JonesCo,Brown,Material(200,Hotel,1),Cash(200))");
+//		ret.add("Transaction(JonesCo,Brown,Material(200,Hotel,1),Cash(200))");
+		
+		
 		
 		graph.createAction(ret);
 		ArrayList<Transaction> trans = graph.getTransactions();
@@ -538,6 +662,7 @@ public class testCases {
 					System.out.println(e.getName()+" HAS THE CASH");
 			}
 		}
+		
 		/*
 		 * Phenotypes that generate Double.MIN_VALUE or 0.0 tax that are NOT iBob
 		 * Transaction(NewCo,Brown,Material(200,Hotel,1),Annuity(300,30)) - Double.MIN_VALUE

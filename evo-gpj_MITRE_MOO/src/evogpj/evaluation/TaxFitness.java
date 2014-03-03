@@ -64,26 +64,28 @@ public class TaxFitness extends FitnessFunction {
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
 		
-		boolean newTransfer = true;
+		TaxCode tc = new TaxCode();
+		tc.setMaterialForAnnuityAudit(0.4);
+		tc.setSingleLinkAudit(0.4);
+		tc.setDoubleLinkAudit(0.2);
 		
-		Transfer_NEO tn = new Transfer_NEO(graph,new TaxCode());
-		Transfer t = new Transfer(nodesList, new TaxCode());
-		
+		Transfer_NEO tn = new Transfer_NEO(graph,tc);
+
+		double auditScore = 0.0;
+		ArrayList<Transaction> legalTransactions = new ArrayList<Transaction>();
 		
 		PrintGraph g = new PrintGraph(nodesList);
 		
 //		execute each transaction
 		for(int i=0;i<transactionList.size();i++){
-			if (newTransfer) {
-				if(tn.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
+			if(tn.doTransfer((Transaction) transactionList.get(i))){
+				auditScore += ((Transaction)transactionList.get(i)).getAuditScore();
+				legalTransactions.add((Transaction)transactionList.get(i));
+				if (this.verbose)
 					g.printGraph((Transaction) transactionList.get(i));
-				}
 			}
-			else {
-				if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
-					g.printGraph((Transaction) transactionList.get(i));
-				}
-			}
+
+
 			
 //			when all of the transactions in the list of been completed
 			if (i==transactionList.size()-1){
@@ -91,15 +93,10 @@ public class TaxFitness extends FitnessFunction {
 //				see Graph.getFinalTransaction for details
 				Transaction finalTransaction = graph.getFinalTransaction();
 				if (finalTransaction != null) {
-					if (newTransfer) {
-						if (tn.doTransfer(finalTransaction)) {
-							g.printGraph(finalTransaction);
-						}
-					}
-					else {
-						if (t.doTransfer(finalTransaction)) {
-							g.printGraph(finalTransaction);
-						}
+					if (tn.doTransfer(finalTransaction)) {
+						auditScore += finalTransaction.getAuditScore();
+						legalTransactions.add((Transaction)transactionList.get(i));
+						g.printGraph(finalTransaction);
 					}
 					
 
@@ -116,11 +113,24 @@ public class TaxFitness extends FitnessFunction {
 			}
 		}
 		
-		ind.setFitness("TaxFitness",-this.finalTax);
+//		ind.setFitness("TaxFitness",-this.finalTax);
+		
+		ind.setFitness("TaxFitness",-this.finalTax - ((80-this.finalTax)*auditScore));
+		ind.setFitness("auditScore",auditScore);
 		
 		if (this.verbose)
 			System.out.println("FITNESS: " + ind.getFitness());
 	}
+	
+	
+	public double getOverallAuditScore(ArrayList<Transaction> transactions, Graph graph) {
+		double retScore = 0.0;
+		
+		
+		
+		return retScore;
+	}
+	
 	
 	/*
 	 * CO-EVOLUTIONARY GA METHODS
@@ -147,9 +157,6 @@ public class TaxFitness extends FitnessFunction {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
-			
-			
 			
 		}
 //		the final fitness is the mean of all transactions with at least one legal transaction

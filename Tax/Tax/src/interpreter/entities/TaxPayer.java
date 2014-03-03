@@ -37,6 +37,15 @@ public class TaxPayer implements Entity{
 		this.canBeTaxed = canBeTaxed;
 	}
 	
+	public boolean ownsPartnershipIn(Entity e) {
+		for (Entity child : this.partnershipIn) {
+			if (child.getName() == e.getName()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public ArrayList<Assets> getPortfolio(){
 		return Portfolio;

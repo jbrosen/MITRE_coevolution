@@ -9,6 +9,10 @@ public class TaxCode {
 	protected double annuityThreshold = 0;
 	protected int childSalePrevention = 0;
 	protected boolean annuityForMaterial = true;
+	protected ArrayList<Integer> auditScoreSeeds = new ArrayList<Integer>();
+	protected double materialForAnnuityAudit = 0.0;
+	protected double singleLinkAudit = 0.0;
+	protected double doubleLinkAudit = 0.0;
 	
 	
 	public TaxCode(){
@@ -17,6 +21,7 @@ public class TaxCode {
 	
 	public TaxCode(ArrayList<String> clauses) {
 		this.createClauses(clauses);
+//		System.out.println(this.materialForAnnuityAudit+", "+this.singleLinkAudit+", "+this.doubleLinkAudit);
 	}
 	
 	public void setAnnuityForMaterial(boolean canSell) {
@@ -43,6 +48,38 @@ public class TaxCode {
 		return this.childSalePrevention;
 	}
 	
+	public ArrayList<Integer> getAuditScoreSeeds() {
+		return auditScoreSeeds;
+	}
+
+	public void setAuditScoreSeeds(ArrayList<Integer> auditScoreSeeds) {
+		this.auditScoreSeeds = auditScoreSeeds;
+	}
+
+	public double getMaterialForAnnuityAudit() {
+		return materialForAnnuityAudit;
+	}
+
+	public void setMaterialForAnnuityAudit(double materialForAnnuityAudit) {
+		this.materialForAnnuityAudit = materialForAnnuityAudit;
+	}
+
+	public double getSingleLinkAudit() {
+		return singleLinkAudit;
+	}
+
+	public void setSingleLinkAudit(double singleLinkAudit) {
+		this.singleLinkAudit = singleLinkAudit;
+	}
+
+	public double getDoubleLinkAudit() {
+		return doubleLinkAudit;
+	}
+
+	public void setDoubleLinkAudit(double doubleLinkAudit) {
+		this.doubleLinkAudit = doubleLinkAudit;
+	}
+
 	/*
 	String tokenRegex = "([a-zA-Z0-9]+\\([0-9]+\\))";
 	Pattern tokenPattern = Pattern.compile(tokenRegex);
@@ -55,6 +92,7 @@ public class TaxCode {
 	*/
 	public void createClauses(ArrayList<String> clauses) {
 		for (String s : clauses) {
+//			System.out.println(s);
 			if (s.startsWith("setAnnuityThreshold")) {
 				double thresh = Double.parseDouble(s.split("[()]")[1]);
 				this.annuityThreshold = thresh/100.0;
@@ -66,6 +104,19 @@ public class TaxCode {
 			else if (s.startsWith("setAnnuityForMaterial")) {
 				boolean canSell = Boolean.parseBoolean(s.split("[()]")[1]);
 				this.annuityForMaterial = canSell;
+			}
+			else if (s.startsWith("AuditScores")) {
+				String newS = s.split("\\(")[1].split("\\)")[0];
+				String[] strSeeds = newS.split(",");
+				double total = 0;
+				for (int i = 0 ; i < strSeeds.length ; ++i) {
+					this.auditScoreSeeds.add(Integer.parseInt(strSeeds[i]));
+					total += Double.parseDouble(strSeeds[i]);
+				}
+				this.materialForAnnuityAudit = this.auditScoreSeeds.get(0)/total;
+				this.singleLinkAudit = this.auditScoreSeeds.get(1)/total;
+				this.doubleLinkAudit = this.auditScoreSeeds.get(2)/total;
+				
 			}
 			
 		}

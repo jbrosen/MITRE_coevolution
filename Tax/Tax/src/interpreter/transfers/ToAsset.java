@@ -10,9 +10,11 @@ public class ToAsset {
 	
 	private TaxCode taxCode;
 	private boolean verbose = Parameters.Defaults.VERBOSE;
+	private double auditScore;
 	
 	public ToAsset(TaxCode tc) {
 		this.taxCode = tc;
+		this.auditScore = 0.0;
 	}
 
 	public boolean canReceive(Entity to, Assets asset) {
@@ -57,7 +59,7 @@ public class ToAsset {
 		 * Potentially need to check the child partners as well for a potential linkage. Won't cause a crash
 		 * but might be logically incorrect
 		 */
-		if (taxCode.getChildSalePrevention() > 0) {
+		if (taxCode.getChildSalePrevention() > 5) {
 			for(Entity e: to.getPartnershipIn()){
 				if(e.getName().equals(asset.getName())){
 					if (this.verbose) {
@@ -66,7 +68,7 @@ public class ToAsset {
 					return false;
 				}
 //					for each Partner of TO, check if they are already partners with the PartnshipAsset
-				else if (e.getType() == "Partnership" && taxCode.getChildSalePrevention() > 1) {
+				else if (e.getType() == "Partnership" && taxCode.getChildSalePrevention() > 5) {
 					for (Entity ee : e.getPartnershipIn()) {
 						if (ee.getName().equals(asset.getName())) {
 							if (this.verbose) {
@@ -80,5 +82,11 @@ public class ToAsset {
 		}
 		return true;
 	}
+	public double getAuditScore() {
+		return this.auditScore;
+	}
 	
+	public void setAuditScore(double auditScore) {
+		this.auditScore = auditScore;
+	}
 }

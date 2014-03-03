@@ -29,13 +29,16 @@ public class Transfer_NEO {
 		this.graph = graph;
 		this.nodes = this.graph.getNodes();
 		this.taxCode = taxCode;
-		ata = new AssetToAsset(this.graph, this.taxCode);
-		fa = new FromAsset(this.taxCode);
-		ta = new ToAsset(this.taxCode);
-		fta = new FromToAsset(this.taxCode);
+
 	}
 	
 	public boolean doTransfer(Transaction transaction) {
+		
+		this.ata = new AssetToAsset(this.graph, this.taxCode);
+		this.fa = new FromAsset(this.taxCode);
+		this.ta = new ToAsset(this.taxCode);
+		this.fta = new FromToAsset(this.taxCode);
+		
 		this.isTaxable = true;
 //		check if legal
 		if(isLegal(transaction)){
@@ -43,9 +46,12 @@ public class Transfer_NEO {
 				System.out.println("___________TRANSACTION IS LEGAL____________");
 			}
 			//System.exit(0);
-
+			transaction.setAuditScore(this.getTotalAuditScore());
 			transferAction(transaction.getAction1(),transaction.getAction2());
 			transferAction(transaction.getAction2(),transaction.getAction1());
+			
+			if (this.verbose)
+				System.out.println("AUDIT SCORE: "+transaction.getAuditScore());
 			return true;
 		}
 		else{
@@ -80,20 +86,16 @@ public class Transfer_NEO {
 		if (asset1.toString() == "Share" || asset2.toString() == "Share")
 			this.isTaxable = false;
 		
-		/*
-		 * NOTE
-		 * need some way to implicitly check the FMV of a PartnershipAsset before checking
-		 * FROM's portfolio for what it's actually worth
-		 */
-		
-		
-		
 //		can the two assets be exchanged?
 		if (!ata.canTransferAssets(asset1, asset2))
 			return false;
 		
 		Entity entity1 = getFrom(action1);
 		Entity entity2 = getFrom(action2);
+		
+//		the two entities can't be the same
+		if (entity1.getName().equals(entity2.getName()))
+			return false;
 		
 //		can entity2 receive asset1? can entity1 receive asset2?
 		if (!(ta.canReceive(entity2, asset1) && ta.canReceive(entity1, asset2)))
@@ -112,12 +114,19 @@ public class Transfer_NEO {
 		if (transferredAsset1 == null || transferredAsset2 == null) {
 			return false;
 			}
-		
-
-		
 		return true;
 	}
 	
+	public double getTotalAuditScore() {
+		double ret = 0.0;
+		
+		ret += this.ata.getAuditScore();
+		ret += this.ta.getAuditScore();
+		ret += this.fta.getAuditScore();
+		ret += this.fa.getAuditScore();
+		
+		return ret;
+	}
 	
 	
 	/*

@@ -16,10 +16,12 @@ public class AssetToAsset {
 	
 	private Graph graph;
 	private TaxCode taxCode;
+	private double auditScore;
 	
 	public AssetToAsset(Graph graph, TaxCode tc) {
 		this.graph = graph;
 		this.taxCode = tc;
+		this.auditScore = 0;
 	}
 
 	
@@ -203,10 +205,10 @@ public class AssetToAsset {
 	}
 	
 	public boolean canTransferAssets(Material asset1, Annuity asset2) {
-		if (asset1.getCurrentFMV() > asset2.getCurrentFMV() || !taxCode.getAnnuityForMaterial())
+		if (asset1.getCurrentFMV() > asset2.getCurrentFMV())
 			return false;
-		
-		return true;	
+		this.auditScore += taxCode.getMaterialForAnnuityAudit();
+		return true;
 	}
 	
 	public boolean canTransferAssets(Material asset1, Cash asset2) {
@@ -261,9 +263,9 @@ public class AssetToAsset {
 	}
 	
 	public boolean canTransferAssets(Annuity asset1, Material asset2) {
-		if (asset2.getCurrentFMV() > asset1.getCurrentFMV() || !taxCode.getAnnuityForMaterial())
+		if (asset2.getCurrentFMV() > asset1.getCurrentFMV())
 			return false;
-		
+		this.auditScore += taxCode.getMaterialForAnnuityAudit();
 		return true;	
 	}
 	
@@ -294,7 +296,15 @@ public class AssetToAsset {
 		return true;	
 	}
 	
-
+	
+	
+	public double getAuditScore() {
+		return this.auditScore;
+	}
+	
+	public void setAuditScore(double auditScore) {
+		this.auditScore = auditScore;
+	}
 	
 
 }

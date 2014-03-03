@@ -86,10 +86,10 @@ public final class Parameters {
         /**
          * verbosity flag. Helpful for debugging.
          */
-        public static final Boolean VERBOSE = true;
+        public static final Boolean VERBOSE = false;
         
-        public static final int POP_SIZE = 100;
-        public static final int NUM_GENS = 5;
+        public static final int POP_SIZE = 1000;
+        public static final int NUM_GENS = 10;
         public static final int NUM_CHOOSE = 10;
         public static final int TIME_OUT = 60;
         // Frequency for selecting each operator
@@ -105,7 +105,7 @@ public final class Parameters {
         public static final int BIN_WIDTH = 5;
         public static final int TOURNEY_SIZE = 7;
 
-        public static final String FITNESS = "fitness.TaxFitness";
+        public static final String FITNESS = "fitness.TaxCodeFitness";
 //        used for co-evolution
         
         /**

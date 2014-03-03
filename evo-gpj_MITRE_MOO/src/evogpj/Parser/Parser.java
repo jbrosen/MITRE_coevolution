@@ -253,7 +253,30 @@ public class Parser {
 					s+=token.getValue();
 					//System.out.println("concatenate terminal: " + s);
 				}
+//				MAKE THIS INTO A FUNCTION
+				else if (token.getValue().equals("<auditScores>")) {
+					ArrayList<Production> pList = this.map.get(token);
+					int numAuditScores = Integer.parseInt(pList.get(0).getTokens().get(0).getValue());
+					String str = "AuditScores(";
+					for (int i = 0 ; i < numAuditScores ; ++i) {
+						if (count >= 0 && count < randList.size()) {
+							str += randList.get(count).toString();
+							count += 1;
+						}
+						else {
+							count = 0;
+							str += randList.get(count).toString();
+							count += 1;
+						}
+						if (i < (numAuditScores - 1)) {
+							str += ",";
+						}
+					}
+					s += str+")";
+				}
+				
 				else{
+//					System.out.println(token.getValue());
 					ArrayList<Production> pList = this.map.get(token);
 //					if there is more than one production, then use the integer mod rule to figure out which one to use
 //					if there is only one production, just use that
@@ -268,14 +291,15 @@ public class Parser {
 							}
 						}
 						
-					}else{
+					}
+					else{
 						ArrayList<Symbol> tokens = pList.get(0).getTokens();
 						loadStack(tokens);
 					}
 				}
 				time_out+=1;
 			}
-		
+//		System.out.println(s);
 		this.phenotype = s;
 //		System.out.println("Phenotype created: " + s);
 		createClauses(s);
@@ -290,13 +314,14 @@ public class Parser {
 //		String tokenRegex = "(([a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\))|[a-zA-Z]+)";
 
 //		String tokenRegex = "(AnnuityThreshold\\([a-zA-Z]+,[a-zA-Z]+,[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\),[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\)\\))";
-		String tokenRegex = "([a-zA-Z0-9]+\\([0-9a-z]+\\))";
+		String tokenRegex = "([a-zA-Z0-9]+\\([0-9a-z,]+\\))";
 		Pattern tokenPattern = Pattern.compile(tokenRegex);
 		Matcher m = tokenPattern.matcher(s);
 		//ArrayList<String> transactions = new ArrayList<String>();
 		while(m.find()) {
 			//System.out.println("now tokens: " + m.group());
 			tmpClauses.add(m.group());
+//			System.out.println("HI: "+m.group());
 		}
 
 		this.clauses = tmpClauses;

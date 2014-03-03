@@ -138,7 +138,7 @@ public class Graph {
 			
 			Actions a21 = new Actions(seller.getName(),"Brown",m1);
 			Actions a22 = new Actions("Brown",seller.getName(),c1);
-			finalTransaction = new Transaction(a21,a22);
+			finalTransaction = new Transaction(a22,a21);
 		}
 		
 		/*
@@ -152,8 +152,6 @@ public class Graph {
 		
 		return finalTransaction;
 	}
-	
-	
 	
 	
 	public void setTransactions(ArrayList<Transaction> trans) {

@@ -17,9 +17,11 @@ public class FromAsset {
 	
 	private TaxCode taxCode;
 	private boolean verbose = Parameters.Defaults.VERBOSE;
+	private double auditScore;
 	
 	public FromAsset(TaxCode tc) {
 		this.taxCode = tc;
+		this.auditScore = 0.0;
 	}
 	
 	public Assets canGive(Entity from, Assets asset) {
@@ -35,8 +37,9 @@ public class FromAsset {
 			return canGive(from, (Share)asset);
 		return null;
 	}
-
+	
 	public PartnershipAsset canGive(Entity from, PartnershipAsset asset) {
+		
 		PartnershipAsset retAsset = null;
 		Assets fromAsset = null;
 		Iterator<Assets> fromItr = from.getPortfolio().iterator();
@@ -75,9 +78,6 @@ public class FromAsset {
 	}
 	
 	public Annuity canGive(Entity from, Annuity asset) {
-		
-		if (taxCode.getChildSalePrevention() > 1 && from.getName() == "Brown")
-			return null;
 		
 		return asset;
 	}
@@ -153,7 +153,7 @@ public class FromAsset {
 						for (String name : from.getCash().get(i).getOwners().keySet()) {
 							newCash.getOwners().put(name, from.getCash().get(i).getOwners().get(name));
 						}
-						from.getPortfolio().remove(from.getCash().get(i));
+//						from.getPortfolio().remove(from.getCash().get(i));
 					}
 //					if only part of a Cash object needs to be taken.
 					/*
@@ -171,17 +171,16 @@ public class FromAsset {
 //						for each owner of the last Cash object to be transferred
 						for (String name : from.getCash().get(i).getOwners().keySet()) {
 							newCash.getOwners().put(name, from.getCash().get(i).getCurrentFMV() - fVal);
-							
-							
 						}
 //						set the new inside basis and FMV of the residual Cash object
-						int cashIndexInPortfolio = from.getPortfolio().indexOf(from.getCash().get(i));
-						from.getPortfolio().get(cashIndexInPortfolio).setCurrentFMV(fVal);
-						from.getPortfolio().get(cashIndexInPortfolio).setInsideBasis(fVal);
+//						int cashIndexInPortfolio = from.getPortfolio().indexOf(from.getCash().get(i));
+//						from.getPortfolio().get(cashIndexInPortfolio).setCurrentFMV(fVal);
+//						from.getPortfolio().get(cashIndexInPortfolio).setInsideBasis(fVal);
+//						
+//						for (String name : from.getCash().get(i).getOwners().keySet()) {
+//							from.getPortfolio().get(cashIndexInPortfolio).getOwners().put(name, fVal);
+//						}
 						
-						for (String name : from.getCash().get(i).getOwners().keySet()) {
-							from.getPortfolio().get(cashIndexInPortfolio).getOwners().put(name, fVal);
-						}
 					}
 				}
 				retCash = newCash;
@@ -201,11 +200,11 @@ public class FromAsset {
 				}
 			}
 			if (fromFound) {
-				double fVal = fromCash.getCurrentFMV() - asset.getCurrentFMV();
-				fromCash.setCurrentFMV(fVal);
-				if (fVal == 0) {
-					from.getPortfolio().remove(fromCash);
-				}
+//				double fVal = fromCash.getCurrentFMV() - asset.getCurrentFMV();
+//				fromCash.setCurrentFMV(fVal);
+//				if (fVal == 0) {
+//					from.getPortfolio().remove(fromCash);
+//				}
 				retCash = fromCash;
 			}
 		}
@@ -218,4 +217,17 @@ public class FromAsset {
 		
 		return asset;
 	}
+	
+	public void incAuditScore(double inc) {
+		this.auditScore += inc;
+	}
+	
+	public double getAuditScore() {
+		return this.auditScore;
+	}
+	
+	public void setAuditScore(double auditScore) {
+		this.auditScore = auditScore;
+	}
+	
 }

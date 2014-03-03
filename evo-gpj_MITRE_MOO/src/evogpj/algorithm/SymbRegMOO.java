@@ -17,6 +17,7 @@
  */
 package evogpj.algorithm;
 
+import evogpj.Parser.Parser;
 import evogpj.evaluation.FitnessFunction;
 
 import evogpj.gp.GPException;
@@ -27,6 +28,7 @@ import evogpj.evaluation.TaxFitness;
 import evogpj.evaluation.TaxCodeFitness;
 
 import interpreter.misc.Graph;
+import interpreter.taxCode.TaxCode;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -60,6 +62,7 @@ import evogpj.sort.CrowdingSort;
 import evogpj.sort.DominatedCount;
 import evogpj.sort.DominatedCount.DominationException;
 import evogpj.operator.ListInitialize;
+import evogpj.phenotype.ListPhenotype;
 
 /**
  * This class contains the main method that runs the GP algorithm.
@@ -155,8 +158,8 @@ public class SymbRegMOO {
         if (timeout > 0)
             TIMEOUT = startTime + (timeout * 1000);
         loadParams(props);
-        SEED = Long.parseLong("1391419054419");
         this.testingFitness = new ArrayList<String>();
+//        SEED = Long.parseLong("1392222152492");
         create_operators(props,SEED);
     }
     
@@ -299,6 +302,11 @@ public class SymbRegMOO {
 	        // individuals first
         pop = initialize.listInitialize(POP_SIZE,SET);
         
+//        Individual ind1 = pop.get(0);
+//        System.out.println(ind1.getPhenotype().getPhenotype());
+//        
+//        System.exit(-1);
+        
         fitnessFunction.evalPop(pop);
         for (Individual ind : pop) {
         	String s = ind.getPhenotype().getPhenotype();
@@ -419,9 +427,11 @@ public class SymbRegMOO {
         // record the best individual in models.txt
         bestPop.add(best);
         long timeStamp = (System.currentTimeMillis() - startTime) / 1000;
-        System.out.println("ELAPSED TIME: " + timeStamp);
+        if (Parameters.Defaults.VERBOSE)
+        	System.out.println("ELAPSED TIME: " + timeStamp);
         while ((generation <= NUM_GENS) && (!finished)) {
-            System.out.format("Generation %d\n", generation);
+        	if (Parameters.Defaults.VERBOSE)
+        		System.out.format("Generation %d\n", generation);
             System.out.flush();
             try {
                 step();
@@ -430,17 +440,21 @@ public class SymbRegMOO {
             }
             // print information about this generation
             //System.out.format("Statistics: %d " + calculateStats() + "%n", generation);
-            System.out.format("Best individual for generation %d:%n", generation);
+            
             double MSE = best.getFitness();
             MSE = ((1-MSE) / (MSE + 1));
-            System.out.println("Genotype: "+best.getGenotype().toString());
-            System.out.println("Phenotype: "+best.getPhenotype().getPhenotype());
-            System.out.println(best.getFitnesses());
-            System.out.println(MSE);
+            if (Parameters.Defaults.VERBOSE) {
+            	System.out.format("Best individual for generation %d:%n", generation);
+	            System.out.println("Genotype: "+best.getGenotype().toString());
+	            System.out.println("Phenotype: "+best.getPhenotype().getPhenotype());
+	            System.out.println(best.getFitnesses());
+	            System.out.println(MSE);
+            }
             System.out.flush();
             bestPop.add(best);
             timeStamp = (System.currentTimeMillis() - startTime) / 1000;
-            System.out.println("ELAPSED TIME: " + timeStamp);
+            if (Parameters.Defaults.VERBOSE)
+            	System.out.println("ELAPSED TIME: " + timeStamp);
             generation++;
             finished = stopCriteria();
             
@@ -478,11 +492,13 @@ public class SymbRegMOO {
     public static String getCurrentTimestamp() {
 		Date date = new Date();
 		Timestamp stamp = new Timestamp(date.getTime());
-		return stamp.toString().replace(" ", "_");
+		String ret = stamp.toString().replace(" ", "_");
+		return ret.replace(":", "_");
     }
 	/*
 	 * Main
 	 */
+    
 	public static void main(String args[]) throws FileNotFoundException {
 		boolean bash = false;
 //		different output stream depending on whether running from local machine or VM
@@ -524,14 +540,26 @@ public class SymbRegMOO {
 				System.out.println("terminated with genotype: " + best.getGenotype().toString());
 				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
 				System.out.println("terminated with fitness: " + best.getFitness());
+			
 				
-				
-				for (String s : srm.testingFitness) {
-					System.out.println(s);
+			if (Parameters.Defaults.FITNESS.equals("fitness.TaxCodeFitness")) {
+				Parser p = new Parser();
+				ArrayList<String> clauses = new ArrayList<String>();
+				try {
+					clauses = p.getClauses(best.getGenotype().getGenotype());
+					TaxCode tc = new TaxCode(clauses);
+					System.out.println(tc.getMaterialForAnnuityAudit()+", "+tc.getSingleLinkAudit()+", "+tc.getDoubleLinkAudit());
+					TaxCodeFitness tcf = new TaxCodeFitness(new Graph());
+					tcf.eval(best);
+					System.out.println(tcf.getFinalTax()+", "+tcf.getAuditScore());
+					
+//					System.out.println(tcf.getFinalTax()+(80-tcf.getFinalTax())*tcf.getAuditScore());
+					
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
+			}
 		}
-
-		
 		
 		catch (IOException e) {
 			System.out.println("\nSomething's wrong\n");

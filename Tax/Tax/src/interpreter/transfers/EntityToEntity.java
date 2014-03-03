@@ -8,7 +8,7 @@ public class EntityToEntity {
 	public EntityToEntity(TaxCode tc) {
 		this.taxCode = tc;
 	}
-	
+
 	
 	
 	

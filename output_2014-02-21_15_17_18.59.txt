@@ -1,0 +1,2 @@
+running trial 
+Running evogpj with seed: 1393013838595

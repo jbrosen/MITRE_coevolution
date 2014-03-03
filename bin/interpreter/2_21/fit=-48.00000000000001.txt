@@ -1,0 +1,6 @@
+Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(300,30))
+Transaction(Brown,Brown,Cash(200),Material(200,Hotel,1))Transaction(NewCo,Jones,Material(200,Hotel,1),Annuity(200,30))
+Transaction(NewCo,Jones,Material(200,Hotel,1),Annuity(200,30))
+Transaction(Jones,NewCo,Annuity(300,30),Material(200,Hotel,1))Transaction(JonesCo,Jones,Annuity(200,30),PartnershipAsset(99,JonesCo))Transaction(NewCo,NewCo,Cash(300),Material(200,Hotel,1))
+Transaction(NewCo,Jones,Cash(200),Material(200,Hotel,1))Transaction(Jones,NewCo,Annuity(200,30),Material(200,Hotel,1))
+Transaction(Jones,NewCo,Annuity(200,30),Material(200,Hotel,1))Transaction(NewCo,NewCo,Annuity(300,30),PartnershipAsset(99,NewCo))

@@ -63,12 +63,31 @@ public class Partnership implements Entity{
 		return partners;
 	}
 	
+	public boolean isOwnedBy(Entity e) {
+		
+		for (Entity parent : this.getPartners()) {
+			if (parent.getName() == e.getName())
+				return true;
+		}
+		
+		return false;
+	}
+	
+	
 	/*child nodes*/
 	public ArrayList<Entity> getPartnershipIn() {
 		return partnershipIn;
 	}
 	
-
+	public boolean ownsPartnershipIn(Entity e) {
+		for (Entity child : this.partnershipIn) {
+			if (child.getName() == e.getName()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public ArrayList<PartnerData> getPartnerData() {
 		return this.partnerData;
 	}
