@@ -15,9 +15,11 @@ import interpreter.assets.Material;
 import interpreter.assets.PartnershipAsset;
 import interpreter.assets.Share;
 import interpreter.entities.Entity;
+import interpreter.entities.Partnership;
 import interpreter.entities.TaxPayer;
 import interpreter.misc.Actions;
 import interpreter.misc.Graph;
+import interpreter.misc.PartnerData;
 import interpreter.misc.Transaction;
 import interpreter.misc.Transfer;
 import interpreter.misc.Transfer_NEO;
@@ -468,13 +470,10 @@ public class testCases {
 	Action1: from: JonesCo to: Jones Asset: Annuity and Action2: from: Jones to: JonesCo Asset: PartnershipAsset
 	 */
 	
-	@Test
-	public void parseTaxCodeFitnessOutput() {
-		
-	}
+
 	
 	
-	@Test
+//	@Test
 	public void parseTaxFitnessOutput() {
 		String fname = "C:\\Users\\Jacob\\Documents\\MIT\\SCOTE\\MITRE_coevolution\\Tax\\Tax\\src\\interpreter\\agg1.txt";
 		try {
@@ -566,9 +565,75 @@ public class testCases {
 	}
 	
 	
-	
-	
 //	@Test
+	public void testShare() {
+		ArrayList<String> ret = new ArrayList<String>();
+		TaxCode tc = new TaxCode();
+		
+//		ret.add("Transaction(Brown,JonesCo,Cash(200),Share(50))");
+//		ret.add("Transaction(NewCo,FamilyTrust,Annuity(200,30),Share(25))");
+//		ret.add("Transaction(FamilyTrust,JonesCo,Annuity(100,30),PartnershipAsset(49.5,NewCo))");
+		ret.add("Transaction(Brown,Jones,Cash(66),PartnershipAsset(33,JonesCo))");
+		
+		graph.createAction(ret);
+		ArrayList<Transaction> trans = graph.getTransactions();
+		
+		
+		
+		for (Entity e : nodesList) {
+			if (e.getName() == "JonesCo") {
+				ArrayList<PartnerData> pd = ((Partnership)e).getPartnerData();
+				for (PartnerData p : pd) {
+					System.out.println("HERE: "+p.getName()+", "+p.getShare());
+				}
+			}
+			else if (e.getName() == "Jones") {
+				System.out.println("TAX: "+e.getTotalTax());
+				for (Assets a : e.getPortfolio()) {
+					if (a.toString().equals("PartnershipAsset")) {
+						System.out.println("JONES "+((PartnershipAsset)a).printPAsset());
+					}
+				}
+			}
+		}
+		System.out.println("BREAK\n\n\n");
+		Transfer_NEO tn = new Transfer_NEO(graph, tc);
+		double auditScore = 0.0;
+		for (Transaction tran : trans) {
+			if (tn.doTransfer(tran)) {
+				g.printGraph(tran);
+				auditScore += tran.getAuditScore();
+			}
+		}
+		for (Entity e : nodesList) {
+			if (e.getName() == "Brown") {
+				for (Assets a : e.getPortfolio()) {
+					if (a.toString().equals("PartnershipAsset")) {
+						System.out.println("BROWN "+((PartnershipAsset)a).printPAsset());
+					}
+				}
+			}
+			else if (e.getName() == "Jones") {
+				System.out.println("TAX: "+e.getTotalTax());
+				for (Assets a : e.getPortfolio()) {
+					if (a.toString().equals("PartnershipAsset")) {
+						System.out.println("JONES "+((PartnershipAsset)a).printPAsset());
+					}
+				}
+			}
+			else if (e.getName() == "JonesCo") {
+				ArrayList<PartnerData> pd = ((Partnership)e).getPartnerData();
+				for (PartnerData p : pd) {
+					System.out.println("HERE: "+p.getName()+", "+p.getShare());
+				}
+				
+			}
+		}
+		
+		
+	}
+	
+	@Test
 	public void testNewTransfer() {
 		TaxCode tc = new TaxCode();
 //		tc.setAnnuityThreshold(0);
@@ -581,14 +646,13 @@ public class testCases {
 		 */
 		
 		
-//		Transaction(Brown,JonesCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))Transaction(Jones,Brown,Cash(200),Cash(200))
-//		Transaction(NewCo,Jones,Material(200,Hotel,1),Annuity(300,30))Transaction(Brown,NewCo,PartnershipAsset(99,FamilyTrust),PartnershipAsset(99,JonesCo))
+//		Transaction(Brown,Brown,PartnershipAsset(99,JonesCo),Cash(100))Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))
+//		Transaction(Brown,NewCo,Material(200,Hotel,1),Annuity(200,30))Transaction(Jones,Jones,Cash(300),Material(200,Hotel,1))
 		ArrayList<String> ret = new ArrayList<String>();
 //		Transaction(NewCo,Jones,Cash(100),Material(200,Hotel,1))Transaction(JonesCo,Brown,PartnershipAsset(99,NewCo),Annuity(200,30))
-		ret.add("Transaction(Brown,JonesCo,Material(200,Hotel,1),PartnershipAsset(99,NewCo))");
-		ret.add("Transaction(Jones,Brown,Cash(200),Cash(200))");
-		ret.add("Transaction(NewCo,Jones,Material(200,Hotel,1),Annuity(300,30))");
-		ret.add("Transaction(Brown,NewCo,PartnershipAsset(99,FamilyTrust),PartnershipAsset(99,JonesCo))");
+		
+		ret.add("Transaction(JonesCo,FamilyTrust,PartnershipAsset(99,NewCo),Annuity(200,30))");
+//		ret.add("Transaction(Brown,NewCo,Material(200,Hotel,1),Annuity(200,30))");
 
 //		
 		graph.createAction(ret);
@@ -619,12 +683,31 @@ public class testCases {
 			g.printGraph(finTran);
 			auditScore += finTran.getAuditScore();
 		}
-		System.out.println(finTran.toString()+", "+auditScore);
-		for (Entity e : nodesList) {
-			if (e.getName()=="Jones") {
-				System.out.println(e.getTotalTax());
-			}
-		}
+//		System.out.println(finTran.toString()+", "+auditScore);
+//		for (Entity e : nodesList) {
+//			if (e.getName()=="Jones") {
+//				System.out.println(e.getTotalTax());
+//			}
+//			else if (e.getName() == "NewCo") {
+//				for (Entity ee : e.getPartners()) {
+//					System.out.println(ee.getName());
+//				}
+//			}
+//			else if (e.getName() == "FamilyTrust") {
+//				for (Assets a : e.getPortfolio()) {
+//					if (a.getName() == "NewCo") {
+//						for (String s : a.getInsideBasisMap().keySet()) {
+//							System.out.println(s+", "+a.getInsideBasisMap().get(s));
+//						}
+//					}
+//				}
+//			}
+//			else if (e.getName() == "Brown") {
+//				for (Assets a : e.getPortfolio()) {
+//					System.out.println(a.getName());
+//				}
+//			}
+//		}
 		
 	}
 	

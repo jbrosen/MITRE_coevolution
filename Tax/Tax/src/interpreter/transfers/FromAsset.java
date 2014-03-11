@@ -62,14 +62,21 @@ public class FromAsset {
 //				1) the name of the asset in FROM's portfolio must match with the name of the original asset
 //				     NOTE: I'm pretty sure this is a redundancy after checking if equal
 //				2) the share of the found asset and asset must be the same, another redundancy probably
-				if(((PartnershipAsset) fromAsset).getName().equals(((PartnershipAsset) asset).getName()) && ((PartnershipAsset) fromAsset).getShare() >= ((PartnershipAsset) asset).getShare()){
+				if(((PartnershipAsset) fromAsset).getName().equals(((PartnershipAsset) asset).getName()) 
+						&& ((PartnershipAsset) fromAsset).getShare() >= ((PartnershipAsset) asset).getShare()){
+					
+					/*
+					 * Set up if-else clause. If the actual asset to be transferred is less than the share that exists
+					 * in the portfolio, then
+					 */
+					
+					
 //					if the case, then set everything up to be transfered and break the loop
 					from.setAssetToBeTransferred(fromAsset);
-					from.setAssetToBeTransferredClone(new PartnershipAsset((PartnershipAsset) fromAsset));
+					from.setAssetToBeTransferredClone(new PartnershipAsset((PartnershipAsset) fromAsset,((PartnershipAsset) asset).getShare()));
 					if (this.verbose)
 						System.out.println("PORTFOLIO CONTAINS :" + from.getAssetToBeTransferredClone().getCurrentFMV());
 					retAsset = (PartnershipAsset)fromAsset;
-//					TELL OSAMA!!!
 					break;
 				}
 			}

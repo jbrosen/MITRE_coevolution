@@ -118,20 +118,20 @@ public class Partnership implements Entity{
 		for(PartnerData pd : this.getPartnerData()){
 			if (this.verbose)
 				System.out.println("partners that tax needs to be pushed to:" + pd.getName());
-
+			
 			for(Entity e: this.getPartners()){
 				if(e.getType().equals("Partnership") && pd.getName().equals(e.getName())){
 					double tax = (pd.getShare()/100.0)*this.getTotalTax();
 					tax+=e.getTotalTax();
 					e.setTotalTax(tax);
 					if (this.verbose)
-						System.out.println("TAX VALUES trying to push in pship:"+tax);
+						System.out.println("TAX VALUES trying to push in pship "+e.getName()+":"+tax);
 					((Partnership) e).pushTaxToPartners();
 				}
 				else if(pd.getName().equals(e.getName()) && e.getType().equals("TaxPayer")){
 					if (this.verbose)
 						System.out.println("name of Tax Payer is:"+e.getName());
-
+					
 					double tax = (pd.getShare()/100.0)*this.getTotalTax();
 					
 					if(e.getTotalTax() == Double.MIN_VALUE){

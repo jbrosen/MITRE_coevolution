@@ -200,7 +200,11 @@ public class Graph {
 			String s  = actionString.substring(7,actionString.length()-1);
 			//System.out.println("INSIDE GRAPH CREATING TOKENS:" + s);
 
+//			String tokenRegex = "(([a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\))|[a-zA-Z]+)";
 			String tokenRegex = "(([a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\))|[a-zA-Z]+)";
+			
+			
+			
 			Pattern tokenPattern = Pattern.compile(tokenRegex);
 			Matcher m = tokenPattern.matcher(s);
 			ArrayList<String> token = new ArrayList<String>();
@@ -225,6 +229,7 @@ public class Graph {
 
 	
 	public Assets createTransferAsset(String Asset){
+//		System.out.println(Asset);
 		int index = Asset.indexOf("(");
 		//System.out.println("Index:" + index);
 		String subRight = Asset.substring(index+1, Asset.length()-1).toString();
@@ -254,7 +259,7 @@ public class Graph {
 		}
 		else if(subLeft.equals("PartnershipAsset")){
 			String name = str[1];
-			double share = Integer.parseInt(str[0]);
+			double share = Double.parseDouble(str[0]);
 			return new PartnershipAsset(share,name);
 		}
 		else if(subLeft.equals("Share")){

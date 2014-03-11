@@ -28,6 +28,9 @@ public class PartnerData {
 	public double getShare(){
 		return this.share;
 	}
+	public void setShare(double share) {
+		this.share = share;
+	}
 	
 	public String getName(){
 		return this.name;

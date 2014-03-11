@@ -7,13 +7,19 @@ public class Bond extends Assets{
 	private int value;
 	public Bond(int value) {
 		this.value = value;	
+		this.name = "bond";
 	}
 
 	@Override
 	public void calculateTax(Entity from) {
 		//return 0.25*this.getCurrentFMV();
 	}
-
+	
+	@Override
+	public String getName() {
+		return this.name;
+	}
+	
 	@Override
 	public void transfer(Entity from, Entity to,Assets asset) {
 		// TODO Auto-generated method stub

@@ -13,6 +13,7 @@ public class Cash extends Assets{
 	public Cash(double value){
 		this.initialFMV = value;
 		this.currentFMV = value;
+		this.name = "Cash: " + this.currentFMV;
 	}
 	
 	public Cash(Cash obj){
@@ -26,6 +27,11 @@ public class Cash extends Assets{
 	@Override
 	public void calculateTax(Entity from) {
 		//return 0.25 * this.getCurrentFMV();
+	}
+	
+	@Override
+	public String getName() {
+		return this.name;
 	}
 	
 	@Override

@@ -115,13 +115,18 @@ public class TaxFitness extends FitnessFunction {
 		
 //		ind.setFitness("TaxFitness",-this.finalTax);
 		
-		ind.setFitness("TaxFitness",-this.finalTax - ((80-this.finalTax)*auditScore));
+		ind.setFitness("TaxFitness",-this.finalTax - ((80 - this.finalTax)*auditScore));
 		ind.setFitness("auditScore",auditScore);
-		
+		if (ind.getFitness() > 0) {
+			System.out.println("HERE: "+this.finalTax+", "+auditScore+", "+ind.getFitness());
+		}
 		if (this.verbose)
 			System.out.println("FITNESS: " + ind.getFitness());
 	}
 	
+	public double getFinalTax() {
+		return this.finalTax;
+	}
 	
 	public double getOverallAuditScore(ArrayList<Transaction> transactions, Graph graph) {
 		double retScore = 0.0;

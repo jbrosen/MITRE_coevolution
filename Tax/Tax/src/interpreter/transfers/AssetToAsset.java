@@ -189,10 +189,11 @@ public class AssetToAsset {
 	}
 	
 	public boolean canTransferAssets(PartnershipAsset asset1, Cash asset2) {
-		if (getPartnershipAsset(asset1).getCurrentFMV() != asset2.getCurrentFMV())
+		if (getPartnershipAsset(asset1).getCurrentFMV(asset1.getShare()) != asset2.getCurrentFMV()) {
 			return false;
+		}
 		
-		return false;	
+		return false;
 	}
 	
 	
@@ -214,7 +215,6 @@ public class AssetToAsset {
 	public boolean canTransferAssets(Material asset1, Cash asset2) {
 		if (asset1.getCurrentFMV() != asset2.getCurrentFMV())
 			return false;
-		
 		return true;	
 	}
 	
@@ -259,7 +259,7 @@ public class AssetToAsset {
 	}
 	
 	public boolean canTransferAssets(Annuity asset1, Share asset2) {
-		return false;	
+		return false;
 	}
 	
 	public boolean canTransferAssets(Annuity asset1, Material asset2) {
@@ -275,10 +275,10 @@ public class AssetToAsset {
 	 */
 	
 	public boolean canTransferAssets(Cash asset1, PartnershipAsset asset2) {
-		if (getPartnershipAsset(asset2).getCurrentFMV() != asset1.getCurrentFMV())
+		if (getPartnershipAsset(asset2).getCurrentFMV(asset2.getShare()) != asset1.getCurrentFMV())
 			return false;
 		
-		return false;	
+		return true;	
 	}
 	
 	public boolean canTransferAssets(Cash asset1, Annuity asset2) {
@@ -288,7 +288,6 @@ public class AssetToAsset {
 	public boolean canTransferAssets(Cash asset1, Material asset2) {
 		if (asset1.getCurrentFMV() != asset2.getCurrentFMV())
 			return false;
-		
 		return true;	
 	}
 	

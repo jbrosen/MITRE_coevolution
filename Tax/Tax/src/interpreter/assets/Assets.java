@@ -19,6 +19,7 @@ public abstract class Assets {
 	protected double insideBasis;
 	protected double initialFMV;
 	protected double currentFMV;
+	protected String name;
 	protected HashMap<String,Double> insideBasisMap = new HashMap<String,Double>();
 	protected HashMap<String,Double> owners = new HashMap<String,Double>();
 	protected boolean verbose = Parameters.Defaults.VERBOSE;
@@ -29,6 +30,7 @@ public abstract class Assets {
 
 	public abstract String toString();
 	public abstract void transfer(Entity from, Entity to,Assets asset);
+	public abstract String getName();
 	
 	public Assets(){
 	}

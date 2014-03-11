@@ -159,7 +159,7 @@ public class SymbRegMOO {
             TIMEOUT = startTime + (timeout * 1000);
         loadParams(props);
         this.testingFitness = new ArrayList<String>();
-//        SEED = Long.parseLong("1392222152492");
+//        SEED = Long.parseLong("1394471660786");
         create_operators(props,SEED);
     }
     
@@ -540,7 +540,7 @@ public class SymbRegMOO {
 				System.out.println("terminated with genotype: " + best.getGenotype().toString());
 				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
 				System.out.println("terminated with fitness: " + best.getFitness());
-			
+				
 				
 			if (Parameters.Defaults.FITNESS.equals("fitness.TaxCodeFitness")) {
 				Parser p = new Parser();

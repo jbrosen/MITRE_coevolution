@@ -30,6 +30,21 @@ public class PartnershipAsset extends Assets{
 		this.insideBasisMap = (HashMap<String, Double>) obj.getInsideBasisMap().clone();
 	}
 	
+	public PartnershipAsset(PartnershipAsset obj, double newShare){
+		this.name  = obj.getName();
+		this.share = newShare;
+		this.owners = (HashMap<String, Double>) obj.getOwners().clone();
+		this.insideBasisMap = (HashMap<String, Double>) obj.getInsideBasisMap().clone();
+		
+		this.currentFMV = this.getCurrentFMV();
+		this.insideBasis = obj.getInsideBasis();
+		this.taxValue = obj.taxValue;
+
+	}
+	
+	
+	
+	
 	public String getName(){
 		return name;
 	}
@@ -95,18 +110,19 @@ public class PartnershipAsset extends Assets{
 				break;
 			}
 		}
+//		System.out.println("START: "+this.getName());
 //		for all entities that own a share in the PartnershipAsset
 		for(String ownerName:this.getOwners().keySet()){
 //			System.out.println("OWNER NAME:" + ownerName);
 //			and for all assets that the Partnership owns
 			for(Assets asset: child.getPortfolio()){
-//				System.out.println("asset found:"+ asset.toString());
+//				System.out.println("asset found:"+ asset.getName());
 //				CHECK WHAT MY ASSETS
 //				if the asset owned by the Partnership is also owned by an entity with a share in the partnership
 				if(asset.getOwners().containsKey(ownerName) ){
 //					Add the CFMV of the asset to this asset
 					CFMV += asset.getCurrentFMV();
-//					System.out.println("VALUE OF CFMV:" + CFMV);
+//					System.out.println("1VALUE OF CFMV:" + CFMV);
 				}
 //				otherwise, if the asset that this Partnership owns is also a PartnershipAsset 
 				else if(asset.toString().equals("PartnershipAsset")){
@@ -114,13 +130,22 @@ public class PartnershipAsset extends Assets{
 //					I think the problem arises when the asset tries to call itself.
 //					Should I put a clause in that passes it up? Or is it illegal to begin with?
 					CFMV += asset.getCurrentFMV() * (this.getShare()/100);
-//					System.out.println("VALUE OF CFMV:" + CFMV);
+//					System.out.println("2VALUE OF CFMV:" + CFMV);
 				}
 			}
 		}
 //		System.out.println("CFMV: "+CFMV);
 		return CFMV;
 	}
+	
+	
+	/*
+	 * Function that gets a percentage of the FMV based on a partial share
+	 */
+	public double getCurrentFMV(double partialShare) {
+		return (partialShare / this.share) * this.getCurrentFMV();
+	}
+	
 	
 	public void setOutsideBasis(double outsideBasis){
 		this.outsideBasis = outsideBasis;
@@ -135,7 +160,7 @@ public class PartnershipAsset extends Assets{
 			System.out.println("THE CFMV IS:"+ this.getCurrentFMV());
 			System.out.println("DIFF IS:"+ diff);
 		}
-
+		
 		if(from.getType().equals("TaxPayer")){
 
 			if(from.getTotalTax() == Double.MIN_VALUE){
@@ -169,15 +194,36 @@ public class PartnershipAsset extends Assets{
 		Iterator<Assets> fromItr = fromPortfolio.iterator();
 		Iterator<Assets> toItr = toPortfolio.iterator();
 		//check if the cash value > CFMV
-
-	
-		//change name of owner before transfer
-		fromAsset.getOwners().clear();
-		fromAsset.getOwners().put(to.getName(), otherAsset.getCurrentFMV());
-		toPortfolio.add(fromAsset);
-		fromPortfolio.remove(fromAsset);
-		update(from,to,otherAsset);
 		
+		/*
+		 * Setup if-else block to see if the whole pship asset is bought or just part of it
+		 */
+//		get the share that is being transfered
+		double newShare = ((PartnershipAsset)from.getAssetToBeTransferredClone()).getShare();
+		double oldShare = ((PartnershipAsset)fromAsset).getShare();
+		
+		if (newShare == oldShare) {
+			//change name of owner before transfer
+			fromAsset.getOwners().clear();
+			fromAsset.getInsideBasisMap().clear();
+			fromAsset.getOwners().put(to.getName(), otherAsset.getCurrentFMV());
+			fromAsset.getInsideBasisMap().put(to.getName(), otherAsset.getCurrentFMV());
+			toPortfolio.add(fromAsset);
+			fromPortfolio.remove(fromAsset);
+			update(from,to,otherAsset);
+		}
+		else {
+//			set the new share in FROM's portfolio
+			((PartnershipAsset)fromAsset).setShare(oldShare - newShare);
+//			set the new basis in the partnership asset to be the percentage of the original share
+			double percent = newShare / ((PartnershipAsset)fromAsset).getShare();
+			double originalBasis = fromAsset.getOwners().get(from.getName());
+			fromAsset.getOwners().put(from.getName(), originalBasis * percent);
+			
+			toPortfolio.add(new PartnershipAsset((PartnershipAsset)fromAsset,newShare));
+			update(from,to,otherAsset);
+			
+		}
 	}
 	
 	/*
@@ -188,7 +234,8 @@ public class PartnershipAsset extends Assets{
 			System.out.println("UPDATE");
 		//System.exit(0);
 		printPAsset();
-		
+//		System.out.println(from.getName()+" gives "+to.getName()+" "+this.getName()+" for "+otherAsset.getName());
+		PartnershipAsset fromAsset = (PartnershipAsset)from.getAssetToBeTransferredClone();
 		//Add a pointer from toAsset to child
 		Entity child = null;
 		ArrayList<Entity> part = (from).getPartnershipIn();
@@ -221,22 +268,45 @@ public class PartnershipAsset extends Assets{
 		else{
 				System.err.println("Child was Null\n");
 			}
-		//remove old parent data in child
+		//adjust old parent data in child
 		ArrayList<PartnerData> pdata = child.getPartnerData();
+		double oldShare = 0.0;
 		for(int i=0;i<pdata.size();i++){
 			if(pdata.get(i).getName().equals(from.getName())){
-				pdata.remove(i);
+//				if the entire PartnershipAsset is purchased
+				if (pdata.get(i).getShare() == fromAsset.getShare()) {
+					oldShare = fromAsset.getShare();
+					pdata.remove(i);
+				}
+//				otherwise, if only part is purchased, just adjust the data
+				else {
+					oldShare = pdata.get(i).getShare();
+					pdata.get(i).setShare(oldShare - fromAsset.getShare());
+				}
 				break;
 			}
 		}
-
-		//change inside basis and IFMV and name of owners of assets owned by parent.
+		
+		//change inside basis and FMV and name of owners of assets owned by parent.
 		for(Assets asset : child.getPortfolio()){
 			if(asset.getOwners().containsKey(from.getName())){
 				asset.getOwners().put(to.getName(),otherAsset.getCurrentFMV());
-				asset.getOwners().remove(from.getName());
-				asset.getInsideBasisMap().remove(from.getName());
 				asset.getInsideBasisMap().put(to.getName(), asset.getCurrentFMV());
+//				if the whole share is taken
+				if (oldShare == fromAsset.getShare()) {
+					asset.getOwners().remove(from.getName());
+					asset.getInsideBasisMap().remove(from.getName());
+					
+				}
+//				otherwise, set the new inside basis as the percentage of the old and new shares
+				else if (asset.getInsideBasisMap().containsKey(from.getName())) {
+//					System.out.println(from.getName());
+//					System.out.println(asset.getInsideBasisMap().keySet());
+//					System.out.println(asset.getOwners().keySet());
+					
+					double oldInsideBasis = asset.getInsideBasisMap().get(from.getName());
+					asset.getInsideBasisMap().put(from.getName(), oldInsideBasis * fromAsset.getShare() / oldShare);
+				}
 			}
 		}
 	}

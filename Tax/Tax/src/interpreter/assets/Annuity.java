@@ -13,6 +13,7 @@ public class Annuity extends Assets{
 	public Annuity(int value , int years) {
 		this.currentFMV = value;
 		this.years = years;
+		this.name = "Annuity, "+this.years+" year, $"+this.currentFMV;
 	}
 
 	public Annuity(Annuity obj){
@@ -27,6 +28,11 @@ public class Annuity extends Assets{
 		//return 0;		
 	}
 
+	@Override
+	public String getName() {
+		return this.name;
+	}
+	
 	public void setYears(int years){
 		this.years = years;
 	}

@@ -68,7 +68,7 @@ public class Transfer_NEO {
 		Entity from = getFrom(action1);
 		Entity to = getTo(action1);
 		if(this.isTaxable){
-			from.getAssetToBeTransferred().calculateTax(from);
+			from.getAssetToBeTransferredClone().calculateTax(from);
 		}
 		action1.getTransferableAssets().transfer(from, to, action2.getTransferableAssets());
 	}
@@ -98,8 +98,9 @@ public class Transfer_NEO {
 			return false;
 		
 //		can entity2 receive asset1? can entity1 receive asset2?
-		if (!(ta.canReceive(entity2, asset1) && ta.canReceive(entity1, asset2)))
+		if (!(ta.canReceive(entity2, asset1) && ta.canReceive(entity1, asset2))) {
 			return false;
+		}
 		
 //		More specifically, can entity1 give asset1 to entity2
 //		and can entity2 give asset2 to entity1
@@ -114,6 +115,7 @@ public class Transfer_NEO {
 		if (transferredAsset1 == null || transferredAsset2 == null) {
 			return false;
 			}
+		
 		return true;
 	}
 	
