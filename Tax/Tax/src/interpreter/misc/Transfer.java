@@ -7,6 +7,8 @@ import interpreter.assets.PartnershipAsset;
 import interpreter.entities.Entity;
 import interpreter.taxCode.TaxCode;
 
+import evogpj.algorithm.Parameters;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 /*
@@ -18,17 +20,17 @@ import java.util.Iterator;
  */
 public class Transfer {
 	
-	
 	private ArrayList<Entity> nodes; 
 	private TaxCode taxCode;
 	private boolean isTaxable = true;
-	private boolean verbose = false;
+	private boolean verbose = Parameters.Defaults.VERBOSE;
 	
 	public Transfer(ArrayList<Entity> nodes, TaxCode taxCode){
 		this.nodes = (ArrayList<Entity>) nodes;
 		this.taxCode = taxCode;
 	}
 	public boolean doTransfer(Transaction transaction){
+		
 		isTaxable = true;
 //		check if legal
 		if(isLegal(transaction)){
@@ -188,10 +190,8 @@ public class Transfer {
 	private boolean isAssetInFromEntity(Entity from, Entity to, Assets asset,Assets otherAsset){
 //		checks if fromAsset and toAsset are in FROMS's portfolio
 		boolean fromFound = false;
-		boolean toFound = false;
 //		the actual assets in the portfolio
 		Assets fromAsset = null;
-		Assets toAsset = null;
 		ArrayList<Assets> fromPortfolio = from.getPortfolio();
 		Iterator<Assets> fromItr = fromPortfolio.iterator();
 		if (this.verbose) {
@@ -214,6 +214,7 @@ public class Transfer {
 					if (this.verbose) {
 						System.out.println("PASSET VALUE:" + ((PartnershipAsset) fromAsset).getCurrentFMV());
 						System.out.println("OTHER ASSER VALUE:" + otherAsset.getCurrentFMV());
+						System.out.println("FRMO ASSET: "+((PartnershipAsset)fromAsset).printPAsset());
 					}
 //					three conditions for transfer
 //					1) current market value of asset must be less than or equal to FMV of asset its being transfered for
@@ -227,8 +228,9 @@ public class Transfer {
 						if (this.verbose)
 							System.out.println("PORTFOLIO CONTAINS :" + from.getAssetToBeTransferredClone().getCurrentFMV());	
 						fromFound = true;
+//						TELL OSAMA!!!
+						break;
 					}
-					break;
 				}
 			}
 //			the asset can't be the same entity it is being transfered to
@@ -237,7 +239,6 @@ public class Transfer {
 					System.out.println("TRANSFERRING CHILD SHARE TO CHILD ENTITY PROHIBITED ");
 				}
 				fromFound = false;
-				
 			}
 			
 			//can't transfer passet to a node which has a passet in node to be transferred
@@ -249,8 +250,45 @@ public class Transfer {
 					}
 					fromFound = false;
 				}
+//				for each Partner of TO, check if they are already partners with the PartnshipAsset
+				else if (e.getType() == "Partnership") {
+					for (Entity ee : e.getPartners()) {
+						if (ee.getName().equals(((PartnershipAsset) asset).getName())) {
+							if (this.verbose) {
+								System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+							}
+							fromFound = false;
+						}
+					}
+				}
 			}
-
+			
+			/*
+			 * Potentially need to check the child partners as well for a potential linkage. Won't cause a crash
+			 * but might be logically incorrect
+			 */
+//			for(Entity e: to.getPartnershipIn()){
+//				if(e.getName().equals(((PartnershipAsset) asset).getName())){
+//					if (this.verbose) {
+//						System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+//					}
+//					fromFound = false;
+//				}
+////				for each Partner of TO, check if they are already partners with the PartnshipAsset
+//				else if (e.getType() == "Partnership") {
+//					for (Entity ee : e.getPartnershipIn()) {
+//						if (ee.getName().equals(((PartnershipAsset) asset).getName())) {
+//							if (this.verbose) {
+//								System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+//							}
+//							fromFound = false;
+//						}
+//					}
+//				}
+//			}
+			/*
+			 * 
+			 */
 		}
 //		if the asset to be transfered is an annuity
 		else if (asset.toString().equals("Annuity")){
@@ -258,21 +296,8 @@ public class Transfer {
 			fromFound = true;
 			//no need to have cash as tax is calculated is calculated differently.
 			//no tax when paid in Annuity
-			/*
-//			 only valid if FROM has a certain percentage of the annuity's value in cash
-			double annuityValue = asset.getCurrentFMV();
-			if (from.getTotalCash() >= this.taxCode.getAnnuityThreshold()*annuityValue) {
-				 fromFound = true;
-			 }
-			 
-//			TEST: see what happens if the threshold adds to the tax liability
 			
-			Double tv1 = new Double(10*this.taxCode.getAnnuityThreshold());
-			int tv2 = tv1.intValue();
-			asset.setTaxValue(tv2);
-			*/
-			
-//				just make sure that the current market value is greater than or equal to otherAsset
+//			just make sure that the current market value is greater than or equal to otherAsset
 			if(asset.getCurrentFMV() < otherAsset.getCurrentFMV()){
 				 fromFound = false;
 			 }
@@ -306,7 +331,6 @@ public class Transfer {
 //			WHY DON'T YOU HAVE TO CHECK WHETHER THE FMV OF THE SHARE IS THE SAME/LESS THAN/EQUAL TO THE CASH VALUE
 			//check to see the other asset is a share.
 			if(otherAsset.toString().equals("Share")){
-				
 				
 				ArrayList<Cash> fromCash = from.getCash();
 //				if there is enough money in FROM's portfolio
@@ -409,8 +433,6 @@ public class Transfer {
 									fromFound = true;
 									break;
 								}
-								
-							
 							}
 						}
 //						if the otherAsset is not a share and you need to aggregate cash
@@ -479,14 +501,14 @@ public class Transfer {
 		}
 //		if the asset to be transfered is a share
 		else{
-			
+
 			isTaxable = false;
 			fromFound = true;
 //			can't purchase a share of a taxpayer
 			if(from.getType().equals("TaxPayer")){
 				fromFound = false;
 			}
-			
+//			if from is a Partnership
 			else{
 				//can't give share to someone who already has a share.
 				for(Entity e :from.getPartners()){
@@ -494,16 +516,21 @@ public class Transfer {
 						fromFound = false;
 						break;
 					}
-					
 				}
 				
+				/*
+				 * Need to check Partnership cycles of length greater than 2
+				 * Check to see if an edge leads to a cycle
+				 */
 				//can't give a share to someone we have a passet in--infinite loop otherwise.
+				
+//				for each entity that the Partnership has a share in 
 				for(Entity e :from.getPartnershipIn()){
+//					cannot transfer a share of itself to an asset it owns
 					if(to.getName().equals(e.getName())){
 						fromFound = false;
 						break;
 					}
-					
 				}
 			}
 				

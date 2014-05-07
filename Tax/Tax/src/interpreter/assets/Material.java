@@ -51,21 +51,22 @@ public class Material extends Assets{
 			double totalIFMV=0;
 //			for each owner of the asset being transfered
 			for(String name : from.getAssetToBeTransferredClone().getOwners().keySet()){
-//				bump up the total initial market value
+//				increment the total initial market value
 				totalIFMV+=from.getAssetToBeTransferredClone().getOwners().get(name);
 //				find the owner from the for loop above to get the PartnerData object of this
 				for(PartnerData partnerData: from.getPartnerData()){
 					if(partnerData.getName().equals(name)){
-//						if the inside basis is already calculated
+//						if they already have an inside basis
 						if(from.getAssetToBeTransferredClone().getInsideBasisMap().containsKey(name)){
 //							set the tax value of its share in the partnership to be its market value minus the inside basis
 							double insideBasis = from.getAssetToBeTransferredClone().getInsideBasisMap().get(name);
-							System.out.println("I AM HERE AND MY TOTAL VALUE IS:"+ insideBasis);
-
+							if (this.verbose)
+								System.out.println("I AM HERE AND MY TOTAL VALUE IS:"+ insideBasis);
+							
 							tax = from.getAssetToBeTransferredClone().getOwners().get(name) - insideBasis;
-							System.out.println("I AM HERE AND MY TOTAL VALUE IS:"+ tax);
+							if (this.verbose)
+								System.out.println("I AM HERE AND MY TOTAL VALUE IS:"+ tax);
 							partnerData.setTaxValue(tax);
-	
 						}
 						else{
 							tax = Math.max(0.0,from.getAssetToBeTransferredClone().getOwners().get(name) - from.getAssetToBeTransferredClone().getInsideBasis());
@@ -80,13 +81,16 @@ public class Material extends Assets{
 					if(e.getName().equals(p.getName())){
 //						tax is current market value minus the sum of the amount each partner paid for it
 						double totalTax = this.getCurrentFMV() - totalIFMV;
-						System.out.println("TAX Before :" + totalTax);
-
-						System.out.println("name :" + p.getName());
-						System.out.println("share :" + p.getShare());
+						if (this.verbose) {
+							System.out.println("TAX Before :" + totalTax);
+	
+							System.out.println("name :" + p.getName());
+							System.out.println("share :" + p.getShare());
+						}
 //						tax for each partner is proportional to its share
 						totalTax = (p.getShare()/100)*totalTax;
-						System.out.println("TAX NOW :" + totalTax);
+						if (this.verbose)
+							System.out.println("TAX NOW :" + totalTax);
 						
 //						push the tax from the ParterData asset to the taxpayer and 
 						if(e.getType().equals("TaxPayer")){
@@ -116,8 +120,6 @@ public class Material extends Assets{
 			}
 		}
 	}
-	
-	
 	
 	/*
 	 * Performs a Material transfer operation between two entities.
@@ -157,7 +159,6 @@ public class Material extends Assets{
 			}
 			else{
 				(this.getOwners()).putAll(to.getAssetToBeTransferredClone().getOwners());
-				System.out.println("I AM HEREERERERERRE NOW :" + to.getAssetToBeTransferredClone().getOwners());
 				this.setInsideBasis(otherAsset.getCurrentFMV());
 				toPortfolio.add(this);
 			}

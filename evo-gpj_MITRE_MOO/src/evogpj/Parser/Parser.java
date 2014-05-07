@@ -1,15 +1,11 @@
 package evogpj.Parser;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -30,7 +26,7 @@ public class Parser {
 
     private Symbol startToken = null;
     private Stack<Symbol> stack = new Stack<Symbol>();
-    private int MAXCOUNT = 100;
+    
     private String filename = "TaxGrammar3";
     private String codeFilename = "TaxCodeGrammar";
     private String phenotype = "";
@@ -38,47 +34,11 @@ public class Parser {
 //    INPUT DOESN'T SEEM TO MATTER HERE, SHOULDNT BE LIKE THIS
 	public ArrayList<String> getAction(ArrayList<Integer> genotypeList) throws IOException{
 		createMap(false);
-		ArrayList<Integer> genotypeList1 = generateRandomList(1000);
-//		generateActions(genotypeList);
-		generateActions(genotypeList1);
+		
+		generateActions(genotypeList);
 		return this.transactions;
 	}
 	
-	public String printMap() {
-		String ret = "";
-		Iterator it = map.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry pairs = (Map.Entry)it.next();
-			String s = "";
-			Symbol symb = (Symbol)pairs.getKey();
-			s += symb.getValue();
-			s += " ==> ";
-			ArrayList<Production> plist = (ArrayList<Production>)pairs.getValue();
-			for (int i=0;i<plist.size();++i) {
-//				s += "\n";
-				ArrayList<Symbol> symbList = plist.get(i).getTokens();
-				for (int j=0;j<symbList.size();++j) {
-					if (j>0) {
-						s += " | ";
-					}
-					s += symbList.get(j).getValue();
-				}
-			}
-			ret += s;
-			ret += "\n";
-		}
-		return ret;
-	}
-	
-	public double getAnnuityThreshold(ArrayList<Integer> genotypeList) throws IOException{
-		createMap(true);
-//		System.out.println(printMap());
-		
-		ArrayList<Integer> genotypeList1 = generateRandomList(20);
-//		generateActions(genotypeList);
-		generateAnnuityThreshold(genotypeList1);
-		return this.annuityThreshold;
-	}
 	
 	
 	/***
@@ -171,10 +131,91 @@ public class Parser {
 		//System.out.println("Phenotype created: " + s);
 		this.phenotype = s;
 		createActions(s);
-		//return this.actions;
-		
-		//return this.transactions;
 	}
+	
+	public void createActions(String s){
+		String tokenRegex = "(Transaction\\([a-zA-Z]+,[a-zA-Z]+,[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\),[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\)\\))";
+		Pattern tokenPattern = Pattern.compile(tokenRegex);
+		Matcher m = tokenPattern.matcher(s);
+		//ArrayList<String> transactions = new ArrayList<String>();
+		while(m.find()) {
+			//System.out.println("now tokens: " + m.group());
+			this.transactions.add(m.group());
+			//createActionsFromTransactions(transactions);
+			//this.actions.add(m.group());
+		}
+	}
+	
+	
+
+	public String getPhenotype(){
+		return phenotype;
+	}
+	
+	/***
+	 * push new child nodes on stack
+	 * after each iteration.
+	 * @param tokens to push on the stack
+	 * 
+	 */
+	public void loadStack(ArrayList<Symbol> tokens){
+		int size = tokens.size();
+		for(int j=size-1;j>=0;j--){
+			this.stack.push(tokens.get(j));
+		}
+	}
+	/***
+	 * 
+	 * @param s String of actions
+	 * separate each action and 
+	 * store them in a list.
+	 */
+	/*public void createActions(String s){
+		String tokenRegex = "(Action\\([a-zA-Z]+,[a-zA-Z]+,[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\)\\))";
+		Pattern tokenPattern = Pattern.compile(tokenRegex);
+		Matcher m = tokenPattern.matcher(s);
+		while(m.find()) {
+			System.out.println("now tokens: " + m.group());
+			this.actions.add(m.group());
+		}
+	}*/
+	
+	
+	public void createActionsFromTransactions(ArrayList<String> transactions){
+		for(String transaction:transactions){		
+		String s  = transaction.substring(12,transaction.length()-1);
+		String tokenRegex = "(([a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\))|[a-zA-Z]+)";
+		Pattern tokenPattern = Pattern.compile(tokenRegex);
+		Matcher m = tokenPattern.matcher(s);
+		ArrayList<String> token = new ArrayList<String>();
+		while(m.find()) {
+			//System.out.println("TOKEN FOR TRANSACTION: " + m.group());
+			token.add(m.group());
+		}
+		String action1 = "Action(" + token.get(0) + "," + token.get(1)+ "," + token.get(2) + ")";
+		String action2 = "Action(" + token.get(1) + ","+token.get(0) + ","+token.get(3) + ")";
+		//System.out.println("ACTION1 CREATED FOR TRANSACTION: " + action1);
+		//System.out.println("ACTION2 CREATED FOR TRANSACTION: " + action2);
+		
+		this.actions.add(action1);
+		this.actions.add(action2);
+		}
+	}
+	
+	/*
+	 * Annuity threshold stuffs
+	 */
+	
+	public double getAnnuityThreshold(ArrayList<Integer> genotypeList) throws IOException{
+		createMap(true);
+//		System.out.println(printMap());
+		
+		ArrayList<Integer> genotypeList1 = generateRandomList(20);
+//		generateActions(genotypeList);
+		generateAnnuityThreshold(genotypeList);
+		return this.annuityThreshold;
+	}
+	
 	public void generateAnnuityThreshold(ArrayList<Integer> randList){
 		String s ="";
 		int count = 0;
@@ -208,46 +249,14 @@ public class Parser {
 				}
 				time_out+=1;
 			}
-		//System.out.println("Phenotype created: " + s);
-		this.phenotype = s;
 		
+		this.phenotype = s;
+//		System.out.println("Phenotype created: " + s);
 		createAnnuityThreshold(s);
 		//return this.actions;
 		
 		//return this.transactions;
 	}
-	public String getPhenotype(){
-		return phenotype;
-	}
-	
-	/***
-	 * push new child nodes on stack
-	 * after each iteration.
-	 * @param tokens to push on the stack
-	 * 
-	 */
-	public void loadStack(ArrayList<Symbol> tokens){
-		int size = tokens.size();
-		for(int j=size-1;j>=0;j--){
-			this.stack.push(tokens.get(j));
-		}
-	}
-	/***
-	 * 
-	 * @param s String of actions
-	 * separate each action and 
-	 * store them in a list.
-	 */
-	/*public void createActions(String s){
-		String tokenRegex = "(Action\\([a-zA-Z]+,[a-zA-Z]+,[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\)\\))";
-		Pattern tokenPattern = Pattern.compile(tokenRegex);
-		Matcher m = tokenPattern.matcher(s);
-		while(m.find()) {
-			System.out.println("now tokens: " + m.group());
-			this.actions.add(m.group());
-		}
-	}*/
-	
 	public void createAnnuityThreshold(String s) {
 		
 		int ann = Integer.parseInt(s);
@@ -270,41 +279,6 @@ public class Parser {
 		
 	}
 	
-	
-	public void createActions(String s){
-		String tokenRegex = "(Transaction\\([a-zA-Z]+,[a-zA-Z]+,[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\),[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\)\\))";
-		Pattern tokenPattern = Pattern.compile(tokenRegex);
-		Matcher m = tokenPattern.matcher(s);
-		//ArrayList<String> transactions = new ArrayList<String>();
-		while(m.find()) {
-			//System.out.println("now tokens: " + m.group());
-			this.transactions.add(m.group());
-			//createActionsFromTransactions(transactions);
-			//this.actions.add(m.group());
-		}
-	}
-	
-	public void createActionsFromTransactions(ArrayList<String> transactions){
-		for(String transaction:transactions){		
-		String s  = transaction.substring(12,transaction.length()-1);
-		String tokenRegex = "(([a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\))|[a-zA-Z]+)";
-		Pattern tokenPattern = Pattern.compile(tokenRegex);
-		Matcher m = tokenPattern.matcher(s);
-		ArrayList<String> token = new ArrayList<String>();
-		while(m.find()) {
-			//System.out.println("TOKEN FOR TRANSACTION: " + m.group());
-			token.add(m.group());
-		}
-		String action1 = "Action(" + token.get(0) + "," + token.get(1)+ "," + token.get(2) + ")";
-		String action2 = "Action(" + token.get(1) + ","+token.get(0) + ","+token.get(3) + ")";
-		//System.out.println("ACTION1 CREATED FOR TRANSACTION: " + action1);
-		//System.out.println("ACTION2 CREATED FOR TRANSACTION: " + action2);
-
-
-		this.actions.add(action1);
-		this.actions.add(action2);
-		}
-	}
 	
 	/***
 	 * read in a grammar file

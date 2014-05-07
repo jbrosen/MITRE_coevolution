@@ -52,88 +52,86 @@ public class Cash extends Assets{
 		boolean fromFound = false;
 		boolean toFound = false;
 
-
-	
-			if(otherAsset.toString().equals("Share")){
+		if(otherAsset.toString().equals("Share")){
+			if (this.verbose)
 				System.out.println("SHARE");
-				
-				this.setInsideBasis(this.getCurrentFMV());
-				for(String s : from.getAssetToBeTransferredClone().getOwners().keySet()){
-					this.getOwners().put(s, this.getCurrentFMV());
-				}
-				toPortfolio.add(this);
+			
+			this.setInsideBasis(this.getCurrentFMV());
+			for(String s : from.getAssetToBeTransferredClone().getOwners().keySet()){
+				this.getOwners().put(s, this.getCurrentFMV());
 			}
-			else{	
+			toPortfolio.add(this);
+		}
+		else{
+			if(to.getType().equals("Partnership")){
+				//to Entity
+				//calculate the share of each partner.
+				double initialFMV = 0;
+				for(String name : to.getAssetToBeTransferredClone().getOwners().keySet()){
+					initialFMV+=to.getAssetToBeTransferredClone().getOwners().get(name);
+				}
 
-				if(to.getType().equals("Partnership")){
+				double diff = this.getCurrentFMV() - initialFMV;
 				
-					System.out.println("BADAR:"+ this.getCurrentFMV());
-
-					//to Entity
-					//calculate the share of each partner.
-					double initialFMV = 0;
-					for(String name : to.getAssetToBeTransferredClone().getOwners().keySet()){
-						initialFMV+=to.getAssetToBeTransferredClone().getOwners().get(name);
-					}
-
-					double diff = this.getCurrentFMV() - initialFMV;
+				//divide it based on shares of each partner.
+				//divide among partners
+				ArrayList<PartnerData> partners=to.getPartnerData();
+				for(PartnerData pd : partners){
+					//for(String entity: to.getAssetToBeTransferredClone().getOwners().keySet()){
+//						if one of the partners of TO is an owner of the asset to be transfered
+						if(to.getAssetToBeTransferredClone().getOwners().keySet().contains(pd.getName())){
+//							  FMV is the inside basis they have in that asset plus their share in the diff
+							  double share = pd.getShare();
+							  double fmv = to.getAssetToBeTransferredClone().getOwners().get(pd.getName()) + (share/100.0)*diff;
+							  Cash c = new Cash(fmv);
+							  c.getOwners().put(pd.getName(), fmv);
+							  c.setInsideBasis(fmv);
+							  toPortfolio.add(c);
+						  }
+						  else{
+//							  if not, then they just get their share in the diff
+							  double share = pd.getShare();
+							  double fmv = (share/100.0)*diff;
+							  Cash c = new Cash(fmv);
+							  c.getOwners().put(pd.getName(), fmv);
+							  c.setInsideBasis(fmv);
+							  toPortfolio.add(c);
+						  }
+					//}
 					
-					//divide it based on shares of each partner.
-					//divide among partners
-					ArrayList<PartnerData> partners=to.getPartnerData();
-					for(PartnerData pd : partners){
-						//for(String entity: to.getAssetToBeTransferredClone().getOwners().keySet()){
-
-							if(to.getAssetToBeTransferredClone().getOwners().keySet().contains(pd.getName())){
-								  double share = pd.getShare();
-								  double fmv = to.getAssetToBeTransferredClone().getOwners().get(pd.getName()) + (share/100.0)*diff;
-								  Cash c = new Cash(fmv);
-								  c.getOwners().put(pd.getName(), fmv);
-								  c.setInsideBasis(fmv);
-								  toPortfolio.add(c);
-							  }
-							  else{
-								  double share = pd.getShare();
-								  double fmv = (share/100.0)*diff;
-								  Cash c = new Cash(fmv);
-								  c.getOwners().put(pd.getName(), fmv);
-								  c.setInsideBasis(fmv);
-								  toPortfolio.add(c);
-							  }
-						//}
-						
-					}	
+				}	
+			}
+//			if TO is a TaxPayer
+			else{
+				
+				//from Entity not partnership
+				double fvalue = fromAsset.getCurrentFMV() - this.getCurrentFMV();
+				fromAsset.setCurrentFMV(fvalue);
+				if(fvalue == 0){
+					fromPortfolio.remove(fromAsset);
+				}
+				
+				// to Entity not partnership
+				while(toItr.hasNext()){
+					toAsset = (Assets) toItr.next();
+					if(toAsset.toString().equals(this.toString())){
+						toFound = true;
+						break;
+					}
+				}
+				if(toFound){
+					toAsset.setInsideBasis(this.getCurrentFMV());
+					toAsset.getOwners().put(to.getName(),this.getCurrentFMV());
+				 
 				}
 				else{
-					
-					//from Entity not partnership
-					double fvalue = fromAsset.getCurrentFMV() - this.getCurrentFMV();
-					fromAsset.setCurrentFMV(fvalue);
-					if(fvalue == 0){
-						fromPortfolio.remove(fromAsset);
-					}
-					
-					// to Entity not partnership
-					while(toItr.hasNext()){
-						toAsset = (Assets) toItr.next();
-						if(toAsset.toString().equals(this.toString())){
-							toFound = true;
-							break;
-						}
-					}
-					if(toFound){
-						toAsset.setInsideBasis(this.getCurrentFMV());
-						toAsset.getOwners().put(to.getName(),this.getCurrentFMV());
-					 
-					}
-					else{
-						 this.setInsideBasis(this.getCurrentFMV());
-						 this.getOwners().put(to.getName(),this.getCurrentFMV());
-						 toPortfolio.add(this);
-					}
-
+					 this.setInsideBasis(this.getCurrentFMV());
+					 this.getOwners().put(to.getName(),this.getCurrentFMV());
+					 toPortfolio.add(this);
 				}
-			}	
+
+			}
+		}	
 	}
 	
 	@Override

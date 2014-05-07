@@ -19,7 +19,6 @@ package evogpj.algorithm;
 
 import evogpj.evaluation.FitnessFunction;
 
-
 import evogpj.gp.GPException;
 import evogpj.gp.Individual;
 import evogpj.gp.MersenneTwisterFast;
@@ -31,7 +30,6 @@ import interpreter.misc.Graph;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -42,8 +40,9 @@ import java.io.PrintWriter;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
@@ -69,7 +68,6 @@ import evogpj.operator.ListInitialize;
  **/
 public class SymbRegMOO {
     
-    
     /* PARAMETERS GOVERNING THE GENETIC PROGRAMMING PROCESS */
     // POPULATION SIZE
     protected int POP_SIZE = Parameters.Defaults.POP_SIZE;
@@ -84,6 +82,7 @@ public class SymbRegMOO {
     protected double MUTATION_RATE = Parameters.Defaults.MUTATION_RATE;
     // CROSSOVER RATE
     protected double XOVER_RATE = Parameters.Defaults.XOVER_RATE;
+    
     
 
     // DEFAULT MUTATION OPERATOR
@@ -112,6 +111,7 @@ public class SymbRegMOO {
     // BEST INDIVIDUAL OF EACH GENERATION
     protected Population bestPop;
     
+
     /* OPERATORS EMPLOYED IN THE SEARCH PROCESS */
     // RANDOM NUMBER GENERATOR
     protected MersenneTwisterFast rand;
@@ -124,7 +124,7 @@ public class SymbRegMOO {
     // MUTATION
     protected Mutate mutate;
     // FITNESS FUNCTIONS
-    protected LinkedHashMap<String, FitnessFunction> fitnessFunctions;
+    protected FitnessFunction fitnessFunction;
     
     
     /* CONTROL FOR END OF EVOLUTIONARY PROCESS*/
@@ -132,10 +132,6 @@ public class SymbRegMOO {
     protected Integer generation;
     // CONTROL FOR END OF PROCESS
     protected Boolean finished;
-    // NUMBER OF GENERATIONS WITHOUT FITNESS IMPROVEMENT
-    protected int counterConvergence;
-    // CURRENT FITNESS OF BEST INDIVIDUAL
-    protected double lastFitness;
     
 
     /**
@@ -198,11 +194,8 @@ public class SymbRegMOO {
      * Empty constructor, to allow subclasses to override
      */
     public SymbRegMOO() {
-        fitnessFunctions = new LinkedHashMap<String, FitnessFunction>();
         finished = false;
         generation = 0;
-        counterConvergence = 0;
-        lastFitness = 0;
         startTime = System.currentTimeMillis();
     }
 
@@ -224,7 +217,6 @@ public class SymbRegMOO {
             POP_SIZE = Integer.valueOf(props.getProperty(Parameters.Names.POP_SIZE));
         if (props.containsKey(Parameters.Names.NUM_GENS))
             NUM_GENS = Integer.valueOf(props.getProperty(Parameters.Names.NUM_GENS));
-     
     }
     
     /**
@@ -243,6 +235,7 @@ public class SymbRegMOO {
         return fitnessOperators;
     }
 
+    
     /**
      * Create all the operators from the loaded params. Seed is the seed to use
      * for the rng. If specified, d_in is some DataJava to use. Otherwise, d_in
@@ -251,23 +244,28 @@ public class SymbRegMOO {
      * @param seed
      * 
      */
+    
     private void create_operators(Properties props, long seed) throws IOException {
-    	boolean verbose = false;
+    	
     	System.out.println("Running evogpj with seed: " + seed);
         rand = new MersenneTwisterFast(seed);
-        fitnessFunctions = splitFitnessOperators(FITNESS);
     	Graph graph = new Graph();
-    	fitnessFunctions.clear();
-    	if (FITNESS.equals("fitness.TaxFitness")) {
-    		fitnessFunctions.put("TaxFitness", new TaxFitness(graph));
+    	
+    	
+     	if (FITNESS.equals("fitness.TaxFitness")) {
+     		fitnessFunction = new TaxFitness(graph);
     	}
     	else if (FITNESS.equals("fitness.TaxCodeFitness")) {
-    		fitnessFunctions.put("TaxCodeFitness", new TaxCodeFitness(graph));
+    		fitnessFunction = new TaxCodeFitness(graph);
     	}
+    	else {
+    		System.out.print("Invalid Fitness Function Operator");
+    		System.exit(-1);
+    	}
+     	
+     	initialize = new ListInitialize(rand);
     	
-        initialize = new ListInitialize(rand);
-        System.out.println("1\n");
-
+     	
         // Set up operators.
         if (SELECT.equals(Parameters.Operators.TOURNEY_SELECT)) {
             select = new TournamentSelection(rand, props);
@@ -284,6 +282,7 @@ public class SymbRegMOO {
 		//initialize
 		int SETSIZE = POP_SIZE;
 		//int MAX_PRODUCTION_CHOICES = 100;
+		
 		ArrayList<ArrayList> SET = new ArrayList<ArrayList>();
 		for(int i=0;i<SETSIZE;i++){
 			ArrayList<Integer> array = new ArrayList<Integer>();
@@ -292,38 +291,25 @@ public class SymbRegMOO {
 			}
 			SET.add(array);
 		}
-        // to set up equalization operator, we need to evaluate all the
-        // individuals first
-        pop = initialize.listInitialize(POP_SIZE,SET);
-        // initialize totalPop to simply the initial population
-        
-        
-        for (FitnessFunction f : fitnessFunctions.values()) {
-        	if (f!=null) {
-                f.evalPop(pop);
-        	}
-        }
-        
-        // calculate domination counts of initial population for tournament selection
-        try {
-            DominatedCount.countDominated(pop, fitnessFunctions);
-        } catch (DominationException e) {
-            System.exit(-1);
-        }
-        System.out.println("2\n");
-        // save first front of initial population
-        // calculate crowding distances of initial population for crowding sort
-        if (SELECT.equals(Parameters.Operators.CROWD_SELECT)) {
-            CrowdingSort.computeCrowdingDistances(pop, fitnessFunctions);
-        }
-    }
+		
 
-    /**
-     * Accept potential migrants into the population
-     * @param migrants
-     */
-    protected void acceptMigrants(Population migrants) {
-            pop.addAll(migrants);
+	        // to set up equalization operator, we need to evaluate all the
+	        // individuals first
+        pop = initialize.listInitialize(POP_SIZE,SET);
+        
+        fitnessFunction.evalPop(pop);
+        
+        
+        /*
+         * the DominatedCount class is only useful for when there are multiple objective functions that need to be standardized,
+         * While we may need to deal with that kind of thing later, for know we can just compare total fitnesses
+         * which we do above
+         */
+        // calculate domination counts of initial population for tournament selection
+        Collections.sort(pop, new FitnessComparator());
+        for (int i = 0 ; i < POP_SIZE ; ++i) {
+        	pop.get(i).setDominationCount(i);
+        }
     }
 	
     /**
@@ -372,47 +358,26 @@ public class SymbRegMOO {
                 }
             } 
         }
-        // evaluate all children
-        for (String fname : fitnessFunctions.keySet()) {
-            FitnessFunction f = fitnessFunctions.get(fname);
-            f.evalPop(childPop);
-        }
+        
+        fitnessFunction.evalPop(childPop);
+        
         // combine the children and parents for a total of 2*POP_SIZE
         totalPop = new Population(pop, childPop);
-        try {
-            // for each individual, count number of individuals that dominate it
-            DominatedCount.countDominated(totalPop, fitnessFunctions);
-        } catch (DominationException e) {
-                System.exit(-1);
+        
+        // calculate domination counts of initial population for tournament selection
+        Collections.sort(totalPop, new FitnessComparator());
+        for (int i = 0 ; i < totalPop.size() ; ++i) {
+        	totalPop.get(i).setDominationCount(i);
         }
-        // if crowding tournament selection is enabled, calculate crowding distances
-        if (SELECT.equals(Parameters.Operators.CROWD_SELECT)) {
-            CrowdingSort.computeCrowdingDistances(totalPop, fitnessFunctions);
-        }
-        // sort the entire 2*POP_SIZE population by domination count and by crowding distance if enabled
-        totalPop.sort(SELECT.equals(Parameters.Operators.CROWD_SELECT));
-
-        // use non-dominated sort to take the POP_SIZE best individuals
-        // also find the latest pareto front
+        
         pop = new Population();
-        paretoFront = new Population();
-        for (int index = 0; index < POP_SIZE; index++) {
-            Individual individual = totalPop.get(index);
-            pop.add(individual);
-            // also save the first front for later use
-            if (individual.getDominationCount().equals(0))
-                paretoFront.add(individual);
+        for (int i =0 ; i < POP_SIZE ; ++i) {
+        	pop.add(totalPop.get(i));
         }
-        // find best individual
-        pop.calculateEuclideanDistances(fitnessFunctions);
+
         best = pop.get(0);
-        for (int index = 0; index < POP_SIZE; index++) {
-            Individual individual = pop.get(index);
-            if(individual.getFitness() > best.getFitness()){
-                best = individual;
-            }
-        }
     }
+
 
     /**
      * get the best individual per generation in a Population object
@@ -422,7 +387,12 @@ public class SymbRegMOO {
     public Population getBestPop(){
         return bestPop;
     }
-                
+    /**
+    * Run the current population for the specified number of generations FOR CO-EVOLUTION
+    * 
+    * @return the best individual found.
+    */
+
     /**
     * Run the current population for the specified number of generations.
     * 
@@ -451,6 +421,8 @@ public class SymbRegMOO {
             System.out.format("Best individual for generation %d:%n", generation);
             double MSE = best.getFitness();
             MSE = ((1-MSE) / (MSE + 1));
+            System.out.println("Genotype: "+best.getGenotype().toString());
+            System.out.println("Phenotype: "+best.getPhenotype().getPhenotype());
             System.out.println(best.getFitnesses());
             System.out.println(MSE);
             System.out.flush();
@@ -461,7 +433,6 @@ public class SymbRegMOO {
             finished = stopCriteria();
             
         }
- 
         return best;
     }
     
@@ -471,10 +442,9 @@ public class SymbRegMOO {
             System.out.println("Timout exceeded, exiting.");
             return true;
         }
-        String firstFitnessFunction = fitnessFunctions.keySet().iterator().next();
         return stop;
     }
-        
+    
     public static Properties loadProps(String propFile) {
             Properties props = new Properties();
             BufferedReader f;
@@ -487,8 +457,8 @@ public class SymbRegMOO {
                     props.load(f);
             } catch (IOException e) {
             }
-            boolean verbose = false;
-            if (verbose)
+            
+            if (Parameters.Defaults.VERBOSE)
             	System.out.println(props.toString());
             return props;
     }
@@ -515,14 +485,11 @@ public class SymbRegMOO {
 		}
 		
 		System.setOut(out);
-		String grammarFile = "";
+		
 		Properties props = null;
 		if (args.length > 0) {
 			if(args[0].equals("TaxProperties.properties"))
 				props = loadProps(args[0]);
-			else{
-				grammarFile = args[0];
-			}
 		}
 		if (props == null) {
 			props = new Properties();
@@ -534,28 +501,22 @@ public class SymbRegMOO {
 			seed = Integer.parseInt(props.getProperty("rng_seed"));
 
 		SymbRegMOO srm;
-		
 		System.out.println("running trial ");
 		try {
 			srm = new SymbRegMOO(props, seed);
+			
 			Individual best = srm.run_population();
 			if (best == null)
 				System.out.println("failed");
 			else
 				System.out.println("terminated with genotype: " + best.getGenotype().toString());
 				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
+				System.out.println("terminated with fitness: " + best.getFitness());
 		}
 		catch (IOException e) {
 			System.out.println("\nSomething's wrong\n");
 		}
-		
-		if (bash) {
-			File file = new File("done_"+t_stamp+".txt");
-		}
-		
 	}
-    
-    
     
     /**
      * calculate some useful statistics about the current generation of the
@@ -587,7 +548,7 @@ public class SymbRegMOO {
         std_l = Math.sqrt(std_l / pop.size());
         return String.format("%.5f %.5f %f %f %9.5f %9.5f", mean_f, std_f,min_f, max_f, mean_l, std_l);
     }
-        
+    
     /**
      * Save text to a filepath
      * @param filepath
@@ -604,5 +565,12 @@ public class SymbRegMOO {
             System.exit(-1);
         }
     }
-  
+ 
+//    compares individuals based on their fitness value
+    public static class FitnessComparator implements Comparator<Individual> {
+    	@Override
+    	public int compare(Individual i1, Individual i2) {
+    		return i2.getFitness().compareTo(i1.getFitness());
+    	}
+    }
 }

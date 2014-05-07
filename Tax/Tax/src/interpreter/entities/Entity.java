@@ -38,7 +38,6 @@ public interface Entity {
 	public double getTotalCash();
 	public ArrayList<Cash> getCash();
 
-
 	
 	
 }

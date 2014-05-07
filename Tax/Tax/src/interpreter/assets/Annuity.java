@@ -42,7 +42,8 @@ public class Annuity extends Assets{
 	 */
 	@Override
 	public void transfer(Entity from, Entity to,Assets otherAsset) {
-		System.out.println("from: " + from.getName() + " -->" + " to: " + to.getName());
+		if (this.verbose)
+			System.out.println("from: " + from.getName() + " -->" + " to: " + to.getName());
 
 		
 		boolean fromFound = false;
@@ -54,9 +55,7 @@ public class Annuity extends Assets{
 		Iterator<Assets> fromItr = fromPortfolio.iterator();
 		Iterator<Assets> toItr = toPortfolio.iterator();
 		
-			
-		
-			toPortfolio.add(this);
+		toPortfolio.add(this);
 	
 		
 	}

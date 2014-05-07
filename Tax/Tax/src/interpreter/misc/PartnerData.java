@@ -2,7 +2,6 @@ package interpreter.misc;
 
 import java.util.ArrayList;
 
-import evogpj.Parser.Symbol;
 
 /*
  * stores info about a partner.
