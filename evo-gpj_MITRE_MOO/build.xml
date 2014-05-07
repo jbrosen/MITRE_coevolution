@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="evogpj">
+    <property name="docs.home" value="${basedir}/doc"/>
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="evogpj.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="jscheme-7.2.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="init" name="build">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="evogpj.classpath"/>
+        </javac>
+    </target>
+    <target depends="build" name="run">
+        <java classname="algorithm.AlgorithmBase" failonerror="true" fork="yes">
+            <classpath refid="evogpj.classpath"/>
+	    <arg line="ExperimentalSetup/silva_regression.properties"/>
+        </java>
+    </target>
+    <target name="run-rand-test">
+        <java classname="gp.MersenneTwister" failonerror="true" fork="yes">
+            <classpath refid="evogpj.classpath"/>
+        </java>
+    </target>
+    <target depends="build" name="jar" description="Create executable jar">
+      <jar jarfile="./evogpj.jar" basedir="./bin">
+	<manifest>
+	  <attribute name="Built-By" value="${user.name}" />
+	  <attribute name="Main-Class" value="algorithm.AlgorithmBase" />
+	  <attribute name="Class-Path" value="${evogpj.classpath}" />
+	</manifest>
+      </jar>
+    </target>
+    <target name="javadoc"
+	    description="Create Javadoc API documentation">
+      <mkdir dir="doc"/>
+      <javadoc sourcepath="src"
+               destdir="doc"
+               packagenames="*">
+      </javadoc>
+    </target>
+</project>

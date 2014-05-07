@@ -1,9 +1,11 @@
 package tests;
 
 import static org.junit.Assert.*;
-import fitness.TaxCodeFitness;
-import genotype.ListGenotype;
-import gp.Individual;
+
+import evogpj.evaluation.TaxCodeFitness;
+import evogpj.genotype.ListGenotype;
+import evogpj.gp.Individual;
+
 import interpreter.PrintGraph;
 import interpreter.assets.Annuity;
 import interpreter.assets.Cash;
@@ -356,9 +358,8 @@ public class testCases {
 		ListGenotype lg = new ListGenotype(alist);
 		Individual ind1 = new Individual(lg);
 		
-		TaxCodeFitness tcf = new TaxCodeFitness(graph,wf);
+		TaxCodeFitness tcf = new TaxCodeFitness(graph);
 		tcf.eval(ind1);
-
 	}
 	
 //	@Test

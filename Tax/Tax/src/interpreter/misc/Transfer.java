@@ -22,6 +22,7 @@ public class Transfer {
 	private ArrayList<Entity> nodes; 
 	private TaxCode taxCode;
 	private boolean isTaxable = true;
+	private boolean verbose = false;
 	
 	public Transfer(ArrayList<Entity> nodes, TaxCode taxCode){
 		this.nodes = (ArrayList<Entity>) nodes;
@@ -31,7 +32,9 @@ public class Transfer {
 		isTaxable = true;
 //		check if legal
 		if(isLegal(transaction)){
-			System.out.println("___________TRANSACTION IS LEGAL____________");
+			if (this.verbose) {
+				System.out.println("___________TRANSACTION IS LEGAL____________");
+			}
 			//System.exit(0);
 
 			transferAction(transaction.getAction1(),transaction.getAction2());
@@ -39,7 +42,9 @@ public class Transfer {
 			return true;
 		}
 		else{
-			System.out.println("___________TRANSACTION IS ILLEGAL____________");
+			if (this.verbose) {
+				System.out.println("___________TRANSACTION IS ILLEGAL____________");
+			}
 			return false;
 		}
 	}
@@ -90,8 +95,10 @@ public class Transfer {
 	 * if from entity does not contain the object, action is illegal
 	 */
 	private boolean isLegal(Transaction transaction){
-		System.out.println("Checking to see if transaction is legal");
-		System.out.println("transaction:"+ transaction.toString());
+		if (this.verbose) {
+			System.out.println("Checking to see if transaction is legal");
+			System.out.println("transaction:"+ transaction.toString());
+		}
 		
 		return (isAsset1PlusAsset2Legal(transaction) && isLegalAction(transaction.getAction1(),transaction.getAction2()) && isLegalAction(transaction.getAction2(),transaction.getAction1()));		
 	}
@@ -161,12 +168,16 @@ public class Transfer {
 		Assets otherAsset = otherAction.getTransferableAssets();
 //		can't make an exchange with yourself
 		if(from.getName().equals(to.getName())){
-			System.out.println("same entities");
+			if (this.verbose) {
+				System.out.println("same entities");
+			}
 			return false;
 		}
 //		then check if FROM even has ASSET in its portfolio
 		else if(!isAssetInFromEntity(from,to,asset,otherAsset)){
-			System.out.println("asset not in from entity");
+			if (this.verbose) {
+				System.out.println("asset not in from entity");
+			}
 			return false;
 		}
 		
@@ -183,27 +194,27 @@ public class Transfer {
 		Assets toAsset = null;
 		ArrayList<Assets> fromPortfolio = from.getPortfolio();
 		Iterator<Assets> fromItr = fromPortfolio.iterator();
-		System.out.println("FROM ENTITY: " + from.getName());
+		if (this.verbose) {
+			System.out.println("FROM ENTITY: " + from.getName());
+		}
 		
 //		if the asset that FROM is supposed to give is a PartnershipAsset
 		if(asset.toString().equals("PartnershipAsset")){
-			System.out.println("PORTOLIO SIZE: "+fromPortfolio.size()+"\n");
-			System.out.println("ASSET COMPARED :" + ((PartnershipAsset) asset).printPAsset());
-			System.out.println("FROM ENTITY :" + from.getName());
+			if (this.verbose) {
+				System.out.println("PORTOLIO SIZE: "+fromPortfolio.size()+"\n");
+				System.out.println("ASSET COMPARED :" + ((PartnershipAsset) asset).printPAsset());
+				System.out.println("FROM ENTITY :" + from.getName());
+			}
 //			iterate through FROM's portfolio
 			while(fromItr.hasNext()){
 				fromAsset = (Assets) fromItr.next();
 				
-//				PartnershipAsset fa = (PartnershipAsset)fromAsset;
-//				System.out.println(fa.printPAsset());
-//				PartnershipAsset blah = (PartnershipAsset)asset;
-//				System.out.println(blah.printPAsset());
-				
-				
 //				if a matching partnership asset is found
 				if((fromAsset).toString().equals(asset.toString())){
-					System.out.println("PASSET VALUE:" + ((PartnershipAsset) fromAsset).getCurrentFMV());
-					System.out.println("OTHER ASSER VALUE:" + otherAsset.getCurrentFMV());
+					if (this.verbose) {
+						System.out.println("PASSET VALUE:" + ((PartnershipAsset) fromAsset).getCurrentFMV());
+						System.out.println("OTHER ASSER VALUE:" + otherAsset.getCurrentFMV());
+					}
 //					three conditions for transfer
 //					1) current market value of asset must be less than or equal to FMV of asset its being transfered for
 //					2) the name of the asset in FROM's portfolio must match with the name of the original asset
@@ -212,8 +223,9 @@ public class Transfer {
 					if(((PartnershipAsset) fromAsset).getCurrentFMV()<=otherAsset.getCurrentFMV() &&  ((PartnershipAsset) fromAsset).getName().equals(((PartnershipAsset) asset).getName()) && ((PartnershipAsset) fromAsset).getShare() >= ((PartnershipAsset) asset).getShare()){
 //						if the case, then set everything up to be transfered and break the loop
 						from.setAssetToBeTransferred(fromAsset);
-						from.setAssetToBeTransferredClone(new PartnershipAsset((PartnershipAsset) fromAsset));					
-						System.out.println("PORTFOLIO CONTAINS :" + from.getAssetToBeTransferredClone().getCurrentFMV());	
+						from.setAssetToBeTransferredClone(new PartnershipAsset((PartnershipAsset) fromAsset));
+						if (this.verbose)
+							System.out.println("PORTFOLIO CONTAINS :" + from.getAssetToBeTransferredClone().getCurrentFMV());	
 						fromFound = true;
 					}
 					break;
@@ -221,7 +233,9 @@ public class Transfer {
 			}
 //			the asset can't be the same entity it is being transfered to
 			if(((PartnershipAsset) asset).getName().equals(to.getName())){
-				System.out.println("TRANSFERRING CHILD SHARE TO CHILD ENTITY PROHIBITED ");
+				if (this.verbose) {
+					System.out.println("TRANSFERRING CHILD SHARE TO CHILD ENTITY PROHIBITED ");
+				}
 				fromFound = false;
 				
 			}
@@ -230,14 +244,18 @@ public class Transfer {
 //			cannot transfer a partnership asset to someone who is in a partnership with that asset
 			for(Entity e: to.getPartners()){
 				if(e.getName().equals(((PartnershipAsset) asset).getName())){
-				System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
-				fromFound = false;
+					if (this.verbose) {
+						System.out.println("TRANSFERRING PASSET TO AN ENTITY WHICH HAS INDIRECTLY LINKED AN WILL CREATE AN INFINITE LOOP ");
+					}
+					fromFound = false;
 				}
 			}
+
 		}
 //		if the asset to be transfered is an annuity
 		else if (asset.toString().equals("Annuity")){
 			this.isTaxable = false;
+			fromFound = true;
 			//no need to have cash as tax is calculated is calculated differently.
 			//no tax when paid in Annuity
 			/*
@@ -258,21 +276,23 @@ public class Transfer {
 			if(asset.getCurrentFMV() < otherAsset.getCurrentFMV()){
 				 fromFound = false;
 			 }
-			 
+
 		}
 //		if the asset to be transfered is a material
 		else if (asset.toString().equals("Material")){
 //			iterate through FROM's portfolio
 			while(fromItr.hasNext()){
 				fromAsset = (Assets) fromItr.next();
-				System.out.println("Asset seen:" + fromAsset.toString());
+				if (this.verbose) 
+					System.out.println("Asset seen:" + fromAsset.toString());
 //				if an equal asset is located
 				if((fromAsset).toString().equals(asset.toString())){
-					System.out.println("name:"+((Material) fromAsset).getName());
+					if (this.verbose)
+						System.out.println("name:"+((Material) fromAsset).getName());
 //					if the two assets also have the same name REDUNDANCY
 					if(((Material) fromAsset).getName().equals(((Material) asset).getName())){
 //						set everything to be transfered
-						fromAsset.setCurrentFMV(200*this.taxCode.getAnnuityThreshold());	// TEST
+//						fromAsset.setCurrentFMV(200*this.taxCode.getAnnuityThreshold());	// TEST
 						from.setAssetToBeTransferred(fromAsset);
 						from.setAssetToBeTransferredClone(new Material((Material) fromAsset));
 						fromFound = true;
@@ -285,8 +305,6 @@ public class Transfer {
 		else if (asset.toString().equals("Cash")){
 //			WHY DON'T YOU HAVE TO CHECK WHETHER THE FMV OF THE SHARE IS THE SAME/LESS THAN/EQUAL TO THE CASH VALUE
 			//check to see the other asset is a share.
-			
-			
 			if(otherAsset.toString().equals("Share")){
 				
 				
@@ -368,7 +386,8 @@ public class Transfer {
 							}
 					}	
 					if(fromFound){
-						System.out.println("YES CASH HAS BEEN FOUND");
+						if (this.verbose) 
+							System.out.println("YES CASH HAS BEEN FOUND");
 						double fvalue = fromAsset.getCurrentFMV() - asset.getCurrentFMV();
 						fromAsset.setCurrentFMV(fvalue);
 						if(fvalue == 0){

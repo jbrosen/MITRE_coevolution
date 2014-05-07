@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import Parser.Symbol;
-import Parser.Type;
+import evogpj.Parser.Symbol;
+import evogpj.Parser.Type;
 
 import calculator.Calculator;
 public class Main {
