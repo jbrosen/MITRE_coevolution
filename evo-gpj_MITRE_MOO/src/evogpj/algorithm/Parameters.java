@@ -88,9 +88,9 @@ public final class Parameters {
          */
         public static final Boolean VERBOSE = true;
         
-        public static final int POP_SIZE = 50;
+        public static final int POP_SIZE = 100;
         public static final int NUM_GENS = 5;
-        public static final int NUM_CHOOSE = 5;
+        public static final int NUM_CHOOSE = 10;
         public static final int TIME_OUT = 60;
         // Frequency for selecting each operator
         public static final double MUTATION_RATE = 0.1;

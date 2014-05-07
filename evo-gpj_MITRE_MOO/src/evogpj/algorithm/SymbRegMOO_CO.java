@@ -87,7 +87,6 @@ public class SymbRegMOO_CO {
         if (timeout > 0)
             TIMEOUT = startTime + (timeout * 1000);
         loadParams(props);
-        SEED = Long.parseLong("1390852853976");
         create_operators(props,SEED);
     }
 	
@@ -290,7 +289,7 @@ public class SymbRegMOO_CO {
         if (Parameters.Defaults.VERBOSE)
         	System.out.println(props.toString());
         return props;
-}
+    }
     public LinkedHashMap<String,Individual> run_population() throws IOException {
   	
 //    Hashmap of the best population that accumulates over the generations of the two populations

@@ -6,6 +6,7 @@ import interpreter.entities.TaxPayer;
 import interpreter.misc.Graph;
 import interpreter.misc.Transaction;
 import interpreter.misc.Transfer;
+import interpreter.misc.Transfer_NEO;
 import interpreter.taxCode.TaxCode;
 
 import java.io.IOException;
@@ -62,13 +63,26 @@ public class TaxFitness extends FitnessFunction {
 		graph.createAction(transactions);
 		ArrayList<Transaction> transactionList = graph.getTransactions();
 		
+		
+		boolean newTransfer = true;
+		
+		Transfer_NEO tn = new Transfer_NEO(graph,new TaxCode());
 		Transfer t = new Transfer(nodesList, new TaxCode());
+		
+		
 		PrintGraph g = new PrintGraph(nodesList);
 		
 //		execute each transaction
 		for(int i=0;i<transactionList.size();i++){
-			if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
-				g.printGraph((Transaction) transactionList.get(i));
+			if (newTransfer) {
+				if(tn.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
+					g.printGraph((Transaction) transactionList.get(i));
+				}
+			}
+			else {
+				if(t.doTransfer((Transaction) transactionList.get(i)) && this.verbose){
+					g.printGraph((Transaction) transactionList.get(i));
+				}
 			}
 			
 //			when all of the transactions in the list of been completed
@@ -77,9 +91,18 @@ public class TaxFitness extends FitnessFunction {
 //				see Graph.getFinalTransaction for details
 				Transaction finalTransaction = graph.getFinalTransaction();
 				if (finalTransaction != null) {
-					if (t.doTransfer(finalTransaction)) {
-						g.printGraph(finalTransaction);
+					if (newTransfer) {
+						if (tn.doTransfer(finalTransaction)) {
+							g.printGraph(finalTransaction);
+						}
 					}
+					else {
+						if (t.doTransfer(finalTransaction)) {
+							g.printGraph(finalTransaction);
+						}
+					}
+					
+
 				}
 //				get the final tax of the primary taxpayer
 				for(int j=0;j<nodesList.size();j++){
@@ -110,10 +133,11 @@ public class TaxFitness extends FitnessFunction {
 //		use the Parser to convert the Genotype of each member of pop into a Tax Code object
 		for (Individual i : pop) {
 			Parser p = new Parser();
+			
 			try{
-				double annThresh = p.getAnnuityThreshold(i.getGenotype().getGenotype());
-				TaxCode tc = new TaxCode();
-				tc.setAnnuityThreshold(annThresh);
+				ArrayList<String> clauses = p.getClauses(i.getGenotype().getGenotype());
+				TaxCode tc = new TaxCode(clauses);
+				
 				double fit = getFitnessOfIndividual(ind, tc);
 //				make sure the interaction did not result in all impossible/infeasible transactions
 				if (fit < Double.MAX_VALUE) {
@@ -123,6 +147,10 @@ public class TaxFitness extends FitnessFunction {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
+			
+			
+			
 		}
 //		the final fitness is the mean of all transactions with at least one legal transaction
 		if (numLegal > 0) {

@@ -1,3 +1,7 @@
-<clauses>::=<clause>
-<clause>::=<annuityThreshold>
+<clauses>::=<clauses><clause>|<clause>
+<clause>::=<threshold>|<bool>
+<threshold>::=setAnnuityThreshold(<annuityThreshold>)
 <annuityThreshold>::=0|20|50|80|90|95|99
+<bool>::==setChildSalePrevention(<numLoops>)|setAnnuityForMaterial(<canSell>)
+<numLoops>::=0|1|2
+<canSell>::=true|false

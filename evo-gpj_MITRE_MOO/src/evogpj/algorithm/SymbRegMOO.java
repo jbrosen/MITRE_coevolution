@@ -111,7 +111,7 @@ public class SymbRegMOO {
     // BEST INDIVIDUAL OF EACH GENERATION
     protected Population bestPop;
     
-
+    public ArrayList<String> testingFitness;
     /* OPERATORS EMPLOYED IN THE SEARCH PROCESS */
     // RANDOM NUMBER GENERATOR
     protected MersenneTwisterFast rand;
@@ -155,6 +155,8 @@ public class SymbRegMOO {
         if (timeout > 0)
             TIMEOUT = startTime + (timeout * 1000);
         loadParams(props);
+        SEED = Long.parseLong("1391419054419");
+        this.testingFitness = new ArrayList<String>();
         create_operators(props,SEED);
     }
     
@@ -298,7 +300,12 @@ public class SymbRegMOO {
         pop = initialize.listInitialize(POP_SIZE,SET);
         
         fitnessFunction.evalPop(pop);
-        
+        for (Individual ind : pop) {
+        	String s = ind.getPhenotype().getPhenotype();
+        	s += ", " + ind.getFitness().toString();
+        	this.testingFitness.add(s);
+        }
+        this.testingFitness.add("END OF INITIALIZATION");
         
         /*
          * the DominatedCount class is only useful for when there are multiple objective functions that need to be standardized,
@@ -374,7 +381,12 @@ public class SymbRegMOO {
         for (int i =0 ; i < POP_SIZE ; ++i) {
         	pop.add(totalPop.get(i));
         }
-
+        for (Individual ind : pop) {
+        	String s = ind.getPhenotype().getPhenotype();
+        	s += ", " + ind.getFitness().toString();
+        	this.testingFitness.add(s);
+        }
+        this.testingFitness.add("END OF GENERATION "+this.generation);
         best = pop.get(0);
     }
 
@@ -512,7 +524,15 @@ public class SymbRegMOO {
 				System.out.println("terminated with genotype: " + best.getGenotype().toString());
 				System.out.println("terminated with phenotype: " + best.getPhenotype().getPhenotype());
 				System.out.println("terminated with fitness: " + best.getFitness());
+				
+				
+				for (String s : srm.testingFitness) {
+					System.out.println(s);
+				}
 		}
+
+		
+		
 		catch (IOException e) {
 			System.out.println("\nSomething's wrong\n");
 		}

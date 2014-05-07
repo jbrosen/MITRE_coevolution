@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -23,6 +25,7 @@ public class Parser {
 	private ArrayList<String> actions = new ArrayList<String>();
 	private ArrayList<String> transactions = new ArrayList<String>();
 	private double annuityThreshold = 0;
+	private ArrayList<String> clauses = new ArrayList<String>();
 
     private Symbol startToken = null;
     private Stack<Symbol> stack = new Stack<Symbol>();
@@ -201,22 +204,45 @@ public class Parser {
 		this.actions.add(action2);
 		}
 	}
-	
+    public String printMap() {
+        String ret = "";
+        Iterator it = map.entrySet().iterator();
+        while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                String s = "";
+                Symbol symb = (Symbol)pairs.getKey();
+                s += symb.getValue();
+                s += " ==> ";
+                ArrayList<Production> plist = (ArrayList<Production>)pairs.getValue();
+                for (int i=0;i<plist.size();++i) {
+//                        s += "\n";
+                        ArrayList<Symbol> symbList = plist.get(i).getTokens();
+                        for (int j=0;j<symbList.size();++j) {
+                                if (j>0) {
+                                        s += " | ";
+                                }
+                                s += symbList.get(j).getValue();
+                        }
+                }
+                ret += s;
+                ret += "\n";
+        }
+        return ret;
+}
 	/*
 	 * Annuity threshold stuffs
 	 */
 	
-	public double getAnnuityThreshold(ArrayList<Integer> genotypeList) throws IOException{
+	public ArrayList<String> getClauses(ArrayList<Integer> genotypeList) throws IOException{
 		createMap(true);
 //		System.out.println(printMap());
 		
-		ArrayList<Integer> genotypeList1 = generateRandomList(20);
 //		generateActions(genotypeList);
-		generateAnnuityThreshold(genotypeList);
-		return this.annuityThreshold;
+		generateClauses(genotypeList);
+		return this.clauses;
 	}
 	
-	public void generateAnnuityThreshold(ArrayList<Integer> randList){
+	public void generateClauses(ArrayList<Integer> randList){
 		String s ="";
 		int count = 0;
 		int time_out=0;
@@ -252,31 +278,28 @@ public class Parser {
 		
 		this.phenotype = s;
 //		System.out.println("Phenotype created: " + s);
-		createAnnuityThreshold(s);
+		createClauses(s);
 		//return this.actions;
 		
 		//return this.transactions;
 	}
-	public void createAnnuityThreshold(String s) {
+	public void createClauses(String s) {
 		
-		int ann = Integer.parseInt(s);
 		
-		this.annuityThreshold = ann/100.0;
-		
-		/*
-		String tokenRegex = "(AnnuityThreshold\\([a-zA-Z]+,[a-zA-Z]+,[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\),[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\)\\))";
+		ArrayList<String> tmpClauses = new ArrayList<String>();
+//		String tokenRegex = "(([a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\))|[a-zA-Z]+)";
+
+//		String tokenRegex = "(AnnuityThreshold\\([a-zA-Z]+,[a-zA-Z]+,[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\),[a-zA-Z]+\\(\\d+(,([a-zA-Z]+|\\d+))*\\)\\))";
+		String tokenRegex = "([a-zA-Z0-9]+\\([0-9a-z]+\\))";
 		Pattern tokenPattern = Pattern.compile(tokenRegex);
 		Matcher m = tokenPattern.matcher(s);
 		//ArrayList<String> transactions = new ArrayList<String>();
 		while(m.find()) {
 			//System.out.println("now tokens: " + m.group());
-			
-			this.annuityThreshold = m.group();
-			//createActionsFromTransactions(transactions);
-			//this.actions.add(m.group());
+			tmpClauses.add(m.group());
 		}
-		*/
-		
+
+		this.clauses = tmpClauses;
 	}
 	
 	

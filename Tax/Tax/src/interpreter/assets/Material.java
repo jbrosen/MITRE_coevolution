@@ -163,9 +163,6 @@ public class Material extends Assets{
 				toPortfolio.add(this);
 			}
 		}
-		
-
-		
 	}
 	
 	public String getName(){
